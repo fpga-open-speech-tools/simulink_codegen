@@ -22,7 +22,7 @@ def parse_json(inputFilename):
             input_struct.avalon_mm_slave_signal_name = 'avalon_slave'
             input_struct.has_avalon_mm_slave_signal = True
             input_struct.data_bus_size = 32
-            input_struct.address_bus_size = math.ceil(math.log(len(json_dict['avalon_memorymapped']['register'])))
+            input_struct.address_bus_size = int(math.ceil(math.log(len(json_dict['avalon_memorymapped']['register']))))
         if json_dict['avalon_sink_flag'] == 1:
             input_struct.sink_signal_name = 'avalon_streaming_sink'
             input_struct.has_sink_signal = True
