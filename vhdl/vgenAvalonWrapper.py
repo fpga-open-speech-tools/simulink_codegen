@@ -2,7 +2,7 @@
 
 # @file vgenAvalonWrapper.py
 #
-#     Python function to auto generate vhdl code given json generated from a corresponding matlab func.
+#     Python function to auto generate vhdl code given json generated from Simulink/Matlab 
 #
 #     @author Trevor Vannoy, Aaron Koenigsberg
 #     @date 2019
@@ -26,8 +26,6 @@ import re
 from textwrap import dedent
 from math import ceil, log
 
-# TODO: add comment header to this file                       (done, may be worth expanding)
-# TODO: make generated VHDL match the coding style guideline  (done?)
 # TODO: error checking
 
 indent = '  '
@@ -112,7 +110,6 @@ def create_entity(name, sink_enabled, sink, source_enabled, source,
 
     return entity
 
-# TODO: add support for instantiating the entity being wrapped by this avalon code
 def create_architecture(name, registers_enabled, registers, register_defaults,
     component_declaration, component_instantiation, clock,
     sink_flag, sink_signal, mm_flag, mm_signal, ci_flag, ci_signal, source_flag, source_signal, co_flag, co_signal):
@@ -128,18 +125,6 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
         registers = sorted(registers, key=lambda k: k['reg_num'])
 
         # declare register signals
-        # NOTE: this block will be refactored later when the format of the
-        # matlab struct gets updated to be more conducive.
-        # for register in registers:
-            # architecture += indent + "signal " + register['name'] + \
-            #  " : std_logic_vector(31 downto 0)"
-            # if 'default_value' in register:
-            #     default = convert_default_value(register['default_value'])
-            #     architecture += " := " + default + "; --" + \
-            #         register['data_type'] + "\n"
-            # else:
-            #     architecture += ";\n"
-        #architecture += create_component_reg_defaults(mm_flag=mm_flag, mm_signal=mm_signal)
         register_defaults = create_component_reg_defaults(mm_flag, mm_signal)
         for register in register_defaults:
             architecture += indent + "signal " + register.replace('<=',
@@ -157,6 +142,8 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
     architecture += create_component_instantiation2(ts_system=clock, entity=name, sink_flag=sink_flag, sink_signal=sink_signal,
                             mm_flag=mm_flag, mm_signal=mm_signal, ci_flag=ci_flag, ci_signal=ci_signal,
                             source_flag=source_flag, source_signal=source_signal, co_flag=co_flag, co_signal=co_signal)
+    
+    architecture += "\n"
 
     if registers_enabled:
         addr_width = int(ceil(log(len(registers),2)))
@@ -179,15 +166,6 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
         architecture += indent + "bus_write : process(clk, reset)\n" + indent + "begin\n"
         architecture += indent*2 + "if reset = '1' then\n"
 
-        # reset registers to default values on reset
-        # NOTE: this code block can be refactored and used later once the
-        # matlab struct is more conducive
-        # for register in registers:
-        #     architecture += indent*3 + register['name'] + " <= "
-        #     if 'default_value' in register:
-        #         default = convert_default_value(register['default_value'])
-        #         architecture += default + ";\n"
-        #architecture += create_component_reg_defaults(mm_flag=mm_flag, mm_signal=mm_signal)
         for reg in register_defaults:
             architecture += indent * 3 + reg + "\n"
 
@@ -213,6 +191,7 @@ def convert_data_type(intype):
     if intype in {'boolean', 'ufix1'}:
         outtype = 'std_logic'
     else:
+        # extract the data width from the matlab datatype string (e.g. sfix32_en28)
         match = re.search('\d+', intype)
         if match:
             width = int(match.group())
@@ -321,7 +300,7 @@ def create_component_reg_defaults(mm_flag, mm_signal):
             name = mm_signal[i]["name"]
             name2 = name.replace("Register_Control_", "")
             def_val = mm_signal[i]["default_value"]
-            # todo: generalize this to work for more than just int to fp32_16 type
+            # TODO: generalize this to work for more than just int to fp32_16 type
             if i == 0 or i == 1:
                 bitstring = int_to_bitstring(def_val, 32, 16)
             else:
