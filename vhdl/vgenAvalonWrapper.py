@@ -2,7 +2,7 @@
 
 # @file vgenAvalonWrapper.py
 #
-#     Python function to auto generate vhdl code given json generated from Simulink/Matlab 
+#     Python function to auto generate vhdl code given json generated from Simulink/Matlab
 #
 #     @author Trevor Vannoy, Aaron Koenigsberg
 #     @date 2019
@@ -142,7 +142,7 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
     architecture += create_component_instantiation2(ts_system=clock, entity=name, sink_flag=sink_flag, sink_signal=sink_signal,
                             mm_flag=mm_flag, mm_signal=mm_signal, ci_flag=ci_flag, ci_signal=ci_signal,
                             source_flag=source_flag, source_signal=source_signal, co_flag=co_flag, co_signal=co_signal)
-    
+
     architecture += "\n"
 
     if registers_enabled:
@@ -205,9 +205,12 @@ def convert_data_type(intype):
 def int_to_bitstring(integer, tot_bits, frac_bits):
     if not (isinstance(integer, int) or integer.is_integer()):
         print("Default value must be an integer. Must manually modify vhdl")
+
     bit_string = bin(integer)[2:]
     bit_string += ("0" * frac_bits)
     bit_string = bit_string.rjust(tot_bits, "0")
+    bit_string = '"{0}"'.format(bit_string)
+
     return bit_string
 
 
@@ -293,37 +296,41 @@ def create_component_instantiation2(ts_system, entity, sink_flag, sink_signal, m
 
 
 def create_component_reg_defaults(mm_flag, mm_signal):
-    global indent
     reg_defs = []
+
     if mm_flag == 1:
         for i in range(len(mm_signal)):
             name = mm_signal[i]["name"]
             name2 = name.replace("Register_Control_", "")
             def_val = mm_signal[i]["default_value"]
-            # TODO: generalize this to work for more than just int to fp32_16 type
-            if i == 0 or i == 1:
-                bitstring = int_to_bitstring(def_val, 32, 16)
-            else:
-                bitstring = int_to_bitstring(def_val, 32, 0)
-            if i == 0:
-                reg_defs.append(name2.ljust(24, ' ') + "  <=  \"" + bitstring + "\";")
-            else:
-                reg_defs.append(name2.ljust(24, ' ') + "  <=  \"" + bitstring + "\";")
+            datatype = mm_signal[i]["data_type"]
+
+            value_str = convert_default_value(def_val, datatype)
+            reg_defs.append(name2.ljust(24, ' ') + "  <=  " + value_str + "; -- " + str(def_val))
+
     return reg_defs
 
 
-def convert_default_value(value):
-    if isinstance(value, int):
-        default_value = "std_logic_vector(to_unsigned({}, 32))".format(value)
-    elif isinstance(value, str):
-        # hex string
-        if value[0] == 'x':
-            default_value = "x\"{}\"".format(value[1:])
-        # binary string
-        elif value[0] == 'b':
-            default_value = "\"{}\"".format(value[1:])
+def convert_default_value(value, datatype):
+    is_int = False
 
-    return default_value
+    # parse the data type string
+    match = re.findall('\d+', datatype)
+    data_width = int(match[0])
+    try:
+        frac_width = int(match[1])
+    except:
+        # no fractional part, so the data type is an int
+        is_int = True
+        pass
+
+    # create the default value string
+    if is_int:
+        value_str = "std_logic_vector(to_unsigned({}, 32))".format(value)
+    else:
+        value_str = int_to_bitstring(value, data_width, frac_width)
+
+    return value_str
 
 
 def parseargs():
