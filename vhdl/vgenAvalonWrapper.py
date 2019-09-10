@@ -153,9 +153,9 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
         architecture += indent*2 + "if rising_edge(clk) and avalon_slave_read = '1' then\n"
         architecture += indent*3 + "case avalon_slave_address is\n"
 
-        for addr, register in enumerate(registers):
+        for register in registers:
             architecture += indent*4 + \
-                "when \"{0:0{1}b}\" => avalon_slave_readdata <= {2};\n".format(addr,\
+                "when \"{0:0{1}b}\" => avalon_slave_readdata <= {2};\n".format(register['reg_num'],\
                 addr_width, register['name'])
 
         architecture += indent*4 + "when others => avalon_slave_readdata <= (others => '0');\n"
@@ -173,9 +173,9 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
             "avalon_slave_write = '1' then\n"
         architecture += indent*3 + "case avalon_slave_address is\n"
 
-        for addr, register in enumerate(registers):
+        for register in registers:
             architecture += indent*4 + \
-                "when \"{0:0{1}b}\" => {2} <= ".format(addr, addr_width,\
+                "when \"{0:0{1}b}\" => {2} <= ".format(register['reg_num'], addr_width,\
                 register['name']) + "avalon_slave_writedata;\n"
 
         architecture += indent*4 + "when others => null;\n"

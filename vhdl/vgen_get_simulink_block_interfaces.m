@@ -101,7 +101,8 @@ if (isempty(register_names)==0) % The avalon memory mapped interface exists
             register_name = register_name(length('register_control_')+1:end);  % remove "register_control_" from name
             avalon1.avalon_memorymapped.register{index}.name      = register_name;
             avalon1.avalon_memorymapped.register{index}.data_type = p.Outport{1};
-            avalon1.avalon_memorymapped.register{index}.reg_num   = index;
+            % register numbers start at 0, so we have to subtract 1
+            avalon1.avalon_memorymapped.register{index}.reg_num   = index - 1;
             Nregisters = length(model_params.register);
             for j=1:Nregisters
                  if strcmpi(register_name,model_params.register(j).name)  % get the register with the same name
