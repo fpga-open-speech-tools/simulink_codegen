@@ -106,7 +106,7 @@ if (isempty(register_names)==0) % The avalon memory mapped interface exists
             Nregisters = length(model_params.register);
             for j=1:Nregisters
                  if strcmpi(register_name,model_params.register(j).name)  % get the register with the same name
-                    avalon1.avalon_memorymapped.register{index}.default_value = model_params.register(j).value;
+                    avalon1.avalon_memorymapped.register{index}.default_value = model_params.register(j).default;
                     avalon1.avalon_memorymapped.register{index}.min_value     = model_params.register(j).min;
                     avalon1.avalon_memorymapped.register{index}.max_value     = model_params.register(j).max;
                 end
@@ -119,7 +119,7 @@ else
     avalon1.avalon_memorymapped = [];
 end
 
-%% Get the Exported Input signals 
+%% Get the Exported Input signals
 % These are the input signals coming in from outside the FPGA
 conduit_names = find_system('SearchDepth','2','regexp','on','BlockType','Inport','BlockDialogParams','export*');
 if (isempty(conduit_names)==0)
@@ -142,7 +142,7 @@ else
     avalon1.conduit_input = [];
 end
 
-%% Get the Exported Output signals 
+%% Get the Exported Output signals
 % These are the output signals going outside the FPGA
 conduit_names = find_system('SearchDepth','2','regexp','on','BlockType','Outport','BlockDialogParams','export*');
 if (isempty(conduit_names)==0)
@@ -176,11 +176,10 @@ end
 %get(gcbh)  % get block parameters when block is selected
 
 
-%% Turn off the compile mode 
+%% Turn off the compile mode
 % Otherwise you won't be able to modify the model
 % If you can't modify, you may need to call
 % the function below multiple times (a terminate call is needed for each compile call)
 % because the termination has been deferred.  This can happen if an error
 % occurs in the function.
 eval([modelName,'([],[],[],''term'');']);  % terminate the compile mode
-
