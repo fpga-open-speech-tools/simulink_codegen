@@ -313,19 +313,23 @@ def create_component_reg_defaults(mm_flag, mm_signal):
 
 def convert_default_value(value, datatype):
     is_int = False
+    is_bool = False
 
-    # parse the data type string
-    match = re.findall('\d+', datatype)
-    data_width = int(match[0])
-    try:
-        frac_width = int(match[1])
-    except:
-        # no fractional part, so the data type is an int
-        is_int = True
-        pass
+    if datatype == 'boolean':
+        is_bool = True
+    else:
+        # parse the data type string
+        match = re.findall('\d+', datatype)
+        data_width = int(match[0])
+        try:
+            frac_width = int(match[1])
+        except:
+            # no fractional part, so the data type is an int
+            is_int = True
+            pass
 
     # create the default value string
-    if is_int:
+    if is_int or is_bool:
         value_str = "std_logic_vector(to_unsigned({}, 32))".format(value)
     else:
         value_str = int_to_bitstring(value, data_width, frac_width)
