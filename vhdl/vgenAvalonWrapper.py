@@ -159,7 +159,6 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
         architecture += indent*3 + "case avalon_slave_address is\n"
 
         for register, data_width in zip(registers, data_widths):
-            print(data_width)
             if data_width == 1:
                 value = "(31 downto 1 => '0') & {0}".format(register['name'])
             elif data_width != 32:
