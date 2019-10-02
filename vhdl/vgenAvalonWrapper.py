@@ -24,7 +24,7 @@ import json
 import argparse
 import re
 from textwrap import dedent
-from math import ceil, log
+from math import ceil, log, fabs
 
 # TODO: error checking
 
@@ -125,10 +125,15 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
         registers = sorted(registers, key=lambda k: k['reg_num'])
 
         # declare register signals
-        register_defaults = create_component_reg_defaults(mm_flag, mm_signal)
-        for register in register_defaults:
-            architecture += indent + "signal " + register.replace('<=',
-                ': std_logic_vector(31  downto 0) :=') + "\n"
+        (register_defaults, data_widths) = create_component_reg_defaults(mm_flag, mm_signal)
+        for register, data_width in zip(register_defaults, data_widths):
+            if data_width == 1:
+                architecture += indent + "signal " + register.replace('<=',
+                ': std_logic :=') + "\n"
+            else:
+                architecture += indent + "signal " + register.replace('<=',
+                ': std_logic_vector({}  downto 0) :='.format(data_width-1)) + "\n"
+
 
 
     architecture += "\n"
@@ -153,10 +158,21 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
         architecture += indent*2 + "if rising_edge(clk) and avalon_slave_read = '1' then\n"
         architecture += indent*3 + "case avalon_slave_address is\n"
 
-        for register in registers:
+        for register, data_width in zip(registers, data_widths):
+            print(data_width)
+            if data_width == 1:
+                value = "(31 downto 1 => '0') & {0}".format(register['name'])
+            elif data_width != 32:
+                if 'sfix' in register['data_type']:
+                    value = '(31 downto {0} => {2}({1})) & {2}'.format(data_width, data_width-1, register['name'])
+                else:
+                    value = '(31 downto {0} => \'0\') & {1}'.format(data_width, register['name'])
+            else:
+                value = register['name']
+
             architecture += indent*4 + \
                 "when \"{0:0{1}b}\" => avalon_slave_readdata <= {2};\n".format(register['reg_num'],\
-                addr_width, register['name'])
+                addr_width, value)
 
         architecture += indent*4 + "when others => avalon_slave_readdata <= (others => '0');\n"
         architecture += indent*3 + "end case;\n" + indent*2 + "end if;\n" + \
@@ -173,10 +189,15 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
             "avalon_slave_write = '1' then\n"
         architecture += indent*3 + "case avalon_slave_address is\n"
 
-        for register in registers:
-            architecture += indent*4 + \
-                "when \"{0:0{1}b}\" => {2} <= ".format(register['reg_num'], addr_width,\
-                register['name']) + "avalon_slave_writedata;\n"
+        for register, data_width in zip(registers, data_widths):
+            if data_width == 1:
+                architecture += indent*4 + \
+                    "when \"{0:0{1}b}\" => {2} <= avalon_slave_writedata(0);\n".format(
+                        register['reg_num'], addr_width, register['name']) 
+            else:
+                architecture += indent*4 + \
+                    "when \"{0:0{1}b}\" => {2} <= avalon_slave_writedata({3} downto 0);\n".format(
+                        register['reg_num'], addr_width, register['name'], data_width-1) 
 
         architecture += indent*4 + "when others => null;\n"
         architecture += indent*3 + "end case;\n" + indent*2 + "end if;\n" + \
@@ -202,16 +223,34 @@ def convert_data_type(intype):
 
     return outtype
 
-def int_to_bitstring(integer, tot_bits, frac_bits):
-    if not (isinstance(integer, int) or integer.is_integer()):
-        print("Default value must be an integer. Must manually modify vhdl")
+def num_to_bitstring(value, tot_bits, frac_bits):
+    # make value positive, then take the two's complement later if value is supposed to be negative
+    is_negative = value < 0
+    value = fabs(value)
 
-    bit_string = bin(integer)[2:]
-    bit_string += ("0" * frac_bits)
-    bit_string = bit_string.rjust(tot_bits, "0")
-    bit_string = '"{0}"'.format(bit_string)
+    # Get rid of the binary point by shifting the value left by frac_bits.
+    # The value must be an int to be converted to a binary string.
+    # The bits in this new value are the closest possible representation
+    # to the original floating point value
+    value = int(round(2**frac_bits * value))
 
-    return bit_string
+    if is_negative:
+        # take the two's complement; this also handles the sign extension    
+        toggle_mask = 2**tot_bits - 1
+        value ^= toggle_mask
+        value += 1
+
+    # [2:] removes '0b' from the binary string
+    bitstring = bin(value)[2:]
+
+    if not is_negative:
+        # sign extend with 0's
+        bitstring = bitstring.rjust(tot_bits, "0")
+
+    # wrap the string in quotes
+    bitstring = '"{0}"'.format(bitstring)
+
+    return bitstring
 
 
 def create_component_declaration2(clock, entity, sink_flag, sink_signal, mm_flag, mm_signal, ci_flag, ci_signal, source_flag, source_signal, co_flag, co_signal):
@@ -297,6 +336,7 @@ def create_component_instantiation2(ts_system, entity, sink_flag, sink_signal, m
 
 def create_component_reg_defaults(mm_flag, mm_signal):
     reg_defs = []
+    data_widths = []
 
     if mm_flag == 1:
         for i in range(len(mm_signal)):
@@ -305,18 +345,21 @@ def create_component_reg_defaults(mm_flag, mm_signal):
             def_val = mm_signal[i]["default_value"]
             datatype = mm_signal[i]["data_type"]
 
-            value_str = convert_default_value(def_val, datatype)
+            (value_str, data_width) = convert_default_value(def_val, datatype)
             reg_defs.append(name2.ljust(24, ' ') + "  <=  " + value_str + "; -- " + str(def_val))
+            data_widths.append(data_width)
 
-    return reg_defs
+    return (reg_defs, data_widths)
 
 
 def convert_default_value(value, datatype):
     is_int = False
     is_bool = False
+    data_width = 32
 
     if datatype == 'boolean':
         is_bool = True
+        data_width = 1
     else:
         # parse the data type string
         match = re.findall('\d+', datatype)
@@ -326,15 +369,16 @@ def convert_default_value(value, datatype):
         except:
             # no fractional part, so the data type is an int
             is_int = True
-            pass
 
     # create the default value string
-    if is_int or is_bool:
-        value_str = "std_logic_vector(to_unsigned({}, 32))".format(value)
+    if is_int:
+        value_str = "std_logic_vector(to_unsigned({}, {}))".format(value, data_width)
+    elif is_bool:
+        value_str = "'{}'".format(value)
     else:
-        value_str = int_to_bitstring(value, data_width, frac_width)
+        value_str = num_to_bitstring(value, data_width, frac_width)
 
-    return value_str
+    return (value_str, data_width)
 
 
 def parseargs():
