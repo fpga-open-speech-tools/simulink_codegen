@@ -49,7 +49,7 @@ if (isempty(avalon_sink_signals)==0) % The avalon streaming sink exists
             if index==1 % get parent name, which will be the entity name
                 parent = get_param(h,'Parent');  % get parent name with path
                 split = strsplit(parent,'/');    % split string into parts separated by '/'
-                avalon1.entity = split{end};     % get the last string
+                avalon1.entity = [model_params.model_abbreviation '_' split{end}];     % get the last string
             end
             p=get_param(h,'CompiledPortDataTypes');
             avalon1.avalon_sink.signal{index}.name        = get(h,'PortName');
