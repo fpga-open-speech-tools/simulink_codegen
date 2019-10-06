@@ -15,13 +15,10 @@ import os.path
 from time import strftime
 
 
-def WriteDriver(fileName, inputParams, overwrite=False):
+def WriteDriver(fileName, inputParams):
     timeString = strftime("%Y-%m-%d %H:%M")
     inputParams.currTime = timeString
-    fileName = "../output/" + fileName
-    if os.path.isfile(fileName) and not overwrite:
-        print("FILE EXISTS, MOVE IT OR CHANGE THE OUTPUT FILE NAME")
-        return
+
     output = open(fileName, "w")
     output.write(  CreateFileHeaderInfo(inputParams)      )
     output.write(  CreateMiscTopOfFile(inputParams)       )
@@ -36,4 +33,5 @@ def WriteDriver(fileName, inputParams, overwrite=False):
     output.write(  CreateExitFunction(inputParams)        )
     output.write(  CreateCustomFunctions(inputParams)     )
     output.write(  CreateEndOfFileStuff(inputParams)      )
-    print("Keep in mind custom_functions.h should be in the directory where you want to compile the driver.")
+
+    print("Keep in mind custom_functions.h should be included when you compile the driver.")

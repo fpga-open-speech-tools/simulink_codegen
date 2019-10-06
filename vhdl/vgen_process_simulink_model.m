@@ -76,6 +76,16 @@ outfile = [hdlpath filesep avalon.entity '_avalon_hw.tcl'];
 vgenTcl(infile, outfile, hdlpath);
 disp(['      created tcl file: ' outfile])
 
+%% Generate the device driver code
+disp('Creating device driver.')
+outfile = [hdlpath filesep mp.model_name '.c'];
+genDeviceDriver(infile, outfile)
+disp(['      created device driver: ' outfile])
+
+% TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
+%       This file shouldn't live in the vhdl folder anymore.
+
+
 disp('vgen: Finished.')
 
 % TODO: reset fast simulation flag so running the model simulation isn't so slow after generating code. 
