@@ -72,6 +72,8 @@ def CreateFPGAAttrReadWrite(inputParams):
         functionString += "static ssize_t " + inputParams.deviceAttributes[i] + "_read(struct device *dev, struct device_attribute *attr, char *buf) {\n"
         if inputParams.attributeReadIsNormal[i]:
             functionString += "  fe_" + inputParams.deviceName + "_dev_t * devp = (fe_" + inputParams.deviceName + "_dev_t *)dev_get_drvdata(dev);\n"
+            # TODO: add support for int, bool, etc.
+            # TODO: fix parsing of fractional bits; this code currently doesn't return the correct part of the string. we should maybe do the parsing elsewhere and have a field in inputParams for fractional bits
             functionString += "  fp_to_string(buf, devp->" + inputParams.deviceAttributes[i] + ", " + inputParams.attributeDataTypes[i][-2:] + ", true, 9);\n"
             functionString += "  strcat2(buf,\"\\n\");\n"
             functionString += "  return strlen(buf);\n"

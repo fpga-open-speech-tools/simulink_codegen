@@ -11,6 +11,8 @@ class InputStructure:
         # device attribute specifications
         self.deviceAttributes = None  # list of string attributes
         self.attributeDataTypes = None  # list of string data types
+        self.attributeDataTypeSigned = None # list of signed/unsigned
+        self.atributeDataTypeFraction = None # list of fraction widths
         self.attributePerms = None  # attribute permissions, list of "0446" or whatever the desired permission is
         #                             for the attribute at the same index
         self.attributeReadIsNormal = None  # is a list of bool vals that informs whether to insert a stub or definition
