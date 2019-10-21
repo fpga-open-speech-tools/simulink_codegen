@@ -33,8 +33,6 @@ function avalon1 = vgen_get_simulink_block_interfaces(model_params)
 % https://www.mathworks.com/matlabcentral/answers/8679-how-to-get-the-port-types-and-dimensions-for-a-block
 modelName = bdroot;  % get model name
 disp(['Placing the model in compile mode.'])
-disp(['     If for some reason an error occurs, you will need to manually terminate the compile mode'])
-disp(['     by executing the command: eval([<modelName>,''([],[],[],''''term'''');'']);  % terminate the compile mode'])
 eval([modelName,'([],[],[],''compile'');']);  % put in compile mode
 
 %% Get the Avalon streaming sink signals
