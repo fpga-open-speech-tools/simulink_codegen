@@ -8,7 +8,7 @@ def create_source_connection_point(input_struct):
     built_string += "add_interface " + ssname + " avalon_streaming start\n"
     built_string += "set_interface_property " + ssname + " associatedClock clock\n"
     built_string += "set_interface_property " + ssname + " associatedReset reset\n"
-    built_string += "set_interface_property " + ssname + " dataBitsPerSymbol 8\n"
+    built_string += "set_interface_property " + ssname + " dataBitsPerSymbol " + str(input_struct.data_bus_size) + "\n"
     built_string += "set_interface_property " + ssname + " errorDescriptor \"\"\n"
     built_string += "set_interface_property " + ssname + " firstSymbolInHighOrderBits true\n"
     built_string += "set_interface_property " + ssname + " maxChannel " + str(input_struct.source_max_channel) + "\n"
