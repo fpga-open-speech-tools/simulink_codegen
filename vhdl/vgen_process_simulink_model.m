@@ -11,7 +11,7 @@
 % FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 % ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %
-% Ross K. Snider
+% Ross K. Snider, Trevor Vannoy
 % Flat Earth Inc
 % 985 Technology Blvd
 % Bozeman, MT 59718
@@ -22,17 +22,29 @@
 % We parse the model to get the Avalon signals and control registers we need for the Avalon vhdl wrapper
 disp(['vgen: Parsing Simulink model: ' mp.model_name '. Please wait until you see the message "vgen: Finished."'])
 try
-    mp.fastsim_flag = 0;  % turn off fast sim so that the model runs at the system clock rate
+    % turn off fast sim so that the model runs at the system clock rate
+    mp.fastsim_flag = 0;
+    % turn off the simulation prompts and the stop callbacks when running HDL workflow (otherwise this runs at each HDL workflow step)
+    mp.sim_prompts = 0;   
     avalon = vgen_get_simulink_block_interfaces(mp);
-catch
+catch ME
     % Terminate the compile mode if an error occurs while the model
     % has been placed in compile mode. Otherwise the model will be frozen
     % and you can't quit Matlab
-    disp('   ***************************************************************************');
-    disp('   Error occurred in function vgen_get_simulink_block_interfaces(mp)');
-    disp('   ***************************************************************************');
     cmd = [bdroot,'([],[],[],''term'');'];
     eval(cmd)
+
+    disp('***************************************************************************');
+    disp('Error occurred in function vgen_get_simulink_block_interfaces(mp)');
+    disp(['line number: ' num2str(ME.stack(1).line)])
+    disp(ME.message)
+    disp('***************************************************************************');
+
+    % reset fast simulation flag so running the model simulation isn't so slow after generating code. 
+    mp.fastsim_flag = 1;
+
+    % turn simulation prompts and callbacks back on for normal simulation.
+    mp.sim_prompts = 1;
 end
 
 %% save the specified clock frequencies
@@ -52,8 +64,6 @@ writejson(avalon, [avalon.entity,'.json'])
 save([avalon.entity '_avalon'], 'avalon')
 
 %% Generate the Simulink model VHDL code
-% turn off the simulation prompts and the stop callbacks when running HDL workflow (otherwise this runs at each HDL workflow step)
-mp.sim_prompts = 0;   
 
 % run the hdl coder
 hdlworkflow
@@ -88,4 +98,8 @@ disp(['      created device driver: ' outfile])
 
 disp('vgen: Finished.')
 
-% TODO: reset fast simulation flag so running the model simulation isn't so slow after generating code. 
+% reset fast simulation flag so running the model simulation isn't so slow after generating code. 
+mp.fastsim_flag = 1;
+
+% turn simulation prompts and callbacks back on for normal simulation.
+mp.sim_prompts = 1;
