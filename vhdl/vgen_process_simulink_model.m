@@ -92,6 +92,22 @@ outfile = [hdlpath filesep mp.model_name '.c'];
 genDeviceDriver(infile, outfile)
 disp(['      created device driver: ' outfile])
 
+%% Generate kernel module build files
+disp('Creating Makefile and Kbuild.')
+genMakefile([hdlpath filesep], mp.model_name)
+disp(['      created Makefile: ' [hdlpath filesep 'Makefile']])
+disp(['      created Kbuild: ' [hdlpath filesep 'Kbuild']])
+
+%% Build kernel module
+% TODO: this needs to be platform independent, but how? Our Windows users 
+%       use a virtual machine to compile the device driver, but that
+%       won't automate very well. Maybe we can build the kernel module 
+%       with Quartus' embedded command shell instead?
+disp('Building kernel module.')
+cd(hdlpath)
+!make clean
+!make ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- 
+
 % TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
 %       This file shouldn't live in the vhdl folder anymore.
 
