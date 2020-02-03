@@ -11,9 +11,9 @@ def CreateProbeFunction(inputParams):
     functionString += "  struct device *device_obj;\n"
     devpString = "fe_" + inputParams.deviceName + "_devp"
     functionString += "  fe_" + inputParams.deviceName + "_dev_t * " + devpString + ";\n"
+    functionString += "  struct resource *r = NULL;\n"
     functionString += "  pr_info(\"" + inputParams.deviceName + "_probe enter\\n\");\n"
     if inputParams.deviceType == 2:  # FPGA device
-        functionString += "  struct resource *r = 0;\n"
         functionString += "  r = platform_get_resource(pdev, IORESOURCE_MEM, 0);\n"
         functionString += "  if (r == NULL) {\n"
         functionString += "    pr_err(\"IORESOURCE_MEM (register space) does not exist\\n\");\n"
@@ -58,7 +58,7 @@ def CreateAttributeFilesAndErrorHandling(inputParams):
     for i in range(len(inputParams.deviceAttributes)):
         functionString += "  status = device_create_file(device_obj, &dev_attr_" + inputParams.deviceAttributes[i] + ");\n"
         functionString += "  if (status)\n"
-        functionString += "    goto bad_device_create_file_" + str(i + 1) + ";\n"
+        functionString += "    goto bad_device_create_file_" + str(i) + ";\n"
         functionString += "\n"
     functionString += "  status = device_create_file(device_obj, &dev_attr_name);\n"
     functionString += "  if (status)\n"
@@ -68,12 +68,11 @@ def CreateAttributeFilesAndErrorHandling(inputParams):
     functionString += "bad_device_create_file_" + str(len(inputParams.deviceAttributes) + 1) + ":\n"
     functionString += "  device_remove_file(device_obj, &dev_attr_name);\n"
     for i in range(len(inputParams.deviceAttributes) - 1, -1, -1):
-        functionString += "bad_device_create_file_" + str(i + 1) + ":\n"
+        functionString += "bad_device_create_file_" + str(i) + ":\n"
         functionString += "  device_remove_file(device_obj, &dev_attr_" + inputParams.deviceAttributes[i] + ");\n\n"
-    if inputParams.deviceType == 2:
-        functionString += "bad_device_create_file_0:\n"
-        functionString += "  device_destroy(cl, dev_num);\n\n"
     functionString += "bad_device_create:\n"
+    if inputParams.deviceType == 2:
+        functionString += "  device_destroy(cl, dev_num);\n\n"
     functionString += "  cdev_del(&fe_" + inputParams.deviceName + "_devp->cdev);\n"
     functionString += "bad_cdev_add:\n"
     functionString += "  class_destroy(cl);\n"

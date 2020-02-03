@@ -12,8 +12,8 @@ def CreateInitFunctionHelper(inputParams):
     functionString += "Generated in CreateInitFunction\n"
     functionString += "*********************************************************/\n"
     functionString += "static int " + inputParams.deviceName + "_init(void) {\n"
-    functionString += "  printk(KERN_ALERT \"FUNCTION AUTO GENERATED AT: " + inputParams.currTime + "\\n\");\n"
     functionString += "  int ret_val = 0;\n"
+    functionString += "  printk(KERN_ALERT \"FUNCTION AUTO GENERATED AT: " + inputParams.currTime + "\\n\");\n"
     if inputParams.deviceType == 0:    # SPI device
         functionString += CreateInitFunctionSPI(inputParams)
     elif inputParams.deviceType == 1:  # I2C device
