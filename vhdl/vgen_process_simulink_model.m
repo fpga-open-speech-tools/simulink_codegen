@@ -106,7 +106,7 @@ disp(['      created Kbuild: ' [hdlpath filesep 'Kbuild']])
 disp('Building kernel module.')
 cd(hdlpath)
 !make clean
-!make ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- 
+!make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- 
 
 % TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
 %       This file shouldn't live in the vhdl folder anymore.
