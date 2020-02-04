@@ -63,6 +63,10 @@ avalon.linux_device_version = mp.linux_device_version;
 writejson(avalon, [avalon.entity,'.json'])
 save([avalon.entity '_avalon'], 'avalon')
 
+%% Create UI config files
+disp('Creating linker json file.')
+genLinkerConfig(mp, ['linker_', mp.model_name, '.json'])
+
 %% Generate the Simulink model VHDL code
 
 % run the hdl coder
