@@ -92,7 +92,7 @@ def parseargs():
 # NOTE: path MUST contain a trailing slash so this code can be platform independent
 def main(path, model_name):
     """
-    Run the program and files needed for building a kernel module
+    Run the program and build files needed for building a kernel module
 
     Inputs:
         path = path, including trailing slash, to the kernel module location
