@@ -32,22 +32,9 @@ linkerConfig.(mp.model_name).majorNo = "*";
 
 links = struct();
 
-numWidgets = containers.Map();
-
+% map widget name to sysfs file
 for register = mp.register
-    % keep track of how many registers have a given widget type so 
-    % we can increment the widget name accordingly
-    widgetType = register.widget_type;
-    if numWidgets.isKey(widgetType)
-        numWidgets(widgetType) = numWidgets(widgetType) + 1;
-    else
-        numWidgets(widgetType) = 1;
-    end
-
-    % widget name is of the form: slider<#><model name>
-    widgetname = [widgetType, num2str(numWidgets(widgetType)), mp.model_name];
-
-    links.(widgetname) = ['/', register.name];
+    links.(register.widget_name) = ['/', register.name];
 end
 
 linkerConfig.(mp.model_name).links = links;
