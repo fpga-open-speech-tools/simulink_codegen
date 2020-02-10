@@ -34,7 +34,7 @@ collections = py.importlib.import_module('collections');
 jsonstr = jsonencode(data);
 
 % create the pretty-printed json string
-prettyjson = char(py.json.dumps(py.json.loads(jsonstr), pyargs('indent', int32(4))));
+prettyjson = char(py.json.dumps(py.json.loads(jsonstr), pyargs('sort_keys', true, 'indent', int32(4))));
 
 % save the string to a file
 fid = fopen(filename, 'w');
