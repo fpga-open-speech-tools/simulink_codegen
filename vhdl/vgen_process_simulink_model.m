@@ -65,7 +65,10 @@ save([avalon.entity '_avalon'], 'avalon')
 
 %% Create UI config files
 disp('Creating linker json file.')
-genLinkerConfig(mp, ['linker_', mp.model_name, '.json'])
+mp = createLinkerWidgetNames(mp);
+genLinkerConfig(mp, ['linker_', mp.model_name, '.json']);
+disp('Creating UI config json file.')
+genUiConfig(mp, ['UI_', mp.model_name, '.json']);
 
 %% Generate the Simulink model VHDL code
 
@@ -107,16 +110,21 @@ disp(['      created Kbuild: ' [hdlpath filesep 'Kbuild']])
 %       use a virtual machine to compile the device driver, but that
 %       won't automate very well. Maybe we can build the kernel module 
 %       with Quartus' embedded command shell instead?
-disp('Building kernel module.')
-cd(hdlpath)
-!make clean
-!make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- 
+if isunix
+    disp('Building kernel module.')
+    cd(hdlpath)
+    !make clean
+    !make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- 
+else
+    disp('Kernel module needs to be manually built in a Linux environment.')
 
 % TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
 %       This file shouldn't live in the vhdl folder anymore.
 
 
 disp('vgen: Finished.')
+
+cd(mp.model_path)
 
 % reset fast simulation flag so running the model simulation isn't so slow after generating code. 
 mp.fastsim_flag = 1;
