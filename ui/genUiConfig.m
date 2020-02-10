@@ -22,6 +22,14 @@
 % support@flatearthinc.com
 
 function genUiConfig(mp, outfile)
+% NOTE: to get jsonencode to create lists when there is only one struct, 
+%       I had to use cell arrays instead of normal arrays. A scalar is the same as a 
+%       1x1 array, so that all makes sense. Creating the cell arrays seemed to work 
+%       best when I created the cell array outside of the struct constructor. 
+%       Essentially, I needed a cell array of [1x1 structs] so jsonencode
+%       would create the intended data structure. The data structure creation 
+%       in this function could probably be cleaner...
+
 uiConfig.module = mp.model_name;
 
 % create the first page and panel
@@ -77,6 +85,16 @@ end
 
     
 function controlObject = createControlObject(register)
+% createControlObject Assemble register info into a struct
+%
+% controlObject = createControlObject(register)
+%
+% This function essentially just renames some fields in the register struct
+%
+% Inputs:
+%   register = register struct from Simulink model init scripts
+% Outputs:
+%   controlObject = register info packed into a struct for json UI config file
 controlObject.linkerName = register.widget_name;
 controlObject.type = register.widget_type;
 controlObject.min = register.min;
@@ -88,6 +106,22 @@ controlObject.style = register.widget_style;
 end
 
 function idx = findFieldValue(arrayOfStruct, field, value)
+% findFieldValue Find a field value in an array of structs
+%
+% idx = findFieldValue(arrayOfStruct, field, value)
+%
+% This function loops through an array of structures, looks at
+% the given field in each struct, and sees if the given value
+% is in any of the structs. If so, it returns the index where that is
+% is true, otherwise the index is 0.
+% 
+% Inputs:
+%   arrayOfStruct = array of structures to loop through
+%   field = the field to look at in each struct
+%   value = the value to look for
+%
+% Outputs:
+%   idx = the index where the field was found
 idx = 0;
 for i = 1:length(arrayOfStruct)
     if strcmpi(arrayOfStruct{i}.(field), value)
