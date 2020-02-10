@@ -17,9 +17,15 @@ def AvalonJsonParse(jsonFileName):
     inputStruct.attributeReadIsNormal = []
     inputStruct.attributeWriteOffsets = []
     inputStruct.attributeDataTypes = []
+    inputStruct.attributeDataTypeSigned = []
+    inputStruct.attributeDataTypeWidth = []
+    inputStruct.attributeDataTypeFraction = []
     for attr in attributes:
         inputStruct.deviceAttributes.append(attr['name'])
         inputStruct.attributeDataTypes.append(attr['data_type'])
+        inputStruct.attributeDataTypeSigned.append(attr['data_type']['signed'])
+        inputStruct.attributeDataTypeWidth.append(attr['data_type']['width'])
+        inputStruct.attributeDataTypeFraction.append(attr['data_type']['fractional_bits'])
         inputStruct.attributePerms.append('0664')
         inputStruct.attributeWriteIsNormal.append(True)
         inputStruct.attributeReadIsNormal.append(True)

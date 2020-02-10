@@ -27,25 +27,14 @@ def parse_json(inputFilename):
             input_struct.sink_signal_name = 'avalon_streaming_sink'
             input_struct.has_sink_signal = True
             for signal in json_dict['avalon_sink']['signal']:
-                input_struct.sink_signal_port_names_and_widths[signal['name']] = datatype_to_bits(signal['data_type'])
+                input_struct.sink_signal_port_names_and_widths[signal['name']] = signal['data_type']['width']
                 if 'channel' in signal['name']:
                     input_struct.sink_max_channel = int(math.pow(2, input_struct.sink_signal_port_names_and_widths[signal['name']]) - 1)
         if json_dict['avalon_source_flag'] == 1:
             input_struct.source_signal_name = 'avalon_streaming_source'
             input_struct.has_source_signal = True
             for signal in json_dict['avalon_source']['signal']:
-                input_struct.source_signal_port_names_and_widths[signal['name']] = datatype_to_bits(signal['data_type'])
+                input_struct.source_signal_port_names_and_widths[signal['name']] = signal['data_type']['width']
                 if 'channel' in signal['name']:
                     input_struct.source_max_channel = int(math.pow(2, input_struct.source_signal_port_names_and_widths[signal['name']]) - 1)
     return input_struct
-
-
-
-def datatype_to_bits(str_type):
-    if str_type == 'boolean':
-        return 1
-    if str_type == 'ufix2':
-        return 2
-    match = re.search('\d+', str_type)
-    if match:
-        return int(match.group(0))

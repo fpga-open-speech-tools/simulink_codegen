@@ -53,7 +53,7 @@ if (isempty(avalon_sink_signals)==0) % The avalon streaming sink exists
             end
             p=get_param(h,'CompiledPortDataTypes');
             avalon1.avalon_sink.signal{index}.name        = get(h,'PortName');
-            avalon1.avalon_sink.signal{index}.data_type   = p.Outport{1};
+            avalon1.avalon_sink.signal{index}.data_type   = parse_data_type(p.Outport{1});
             index = index + 1;
         end
     end
@@ -75,7 +75,7 @@ if (isempty(avalon_source_signals)==0) % The avalon streaming source exists
             h = getSimulinkBlockHandle(signal_name);  % get block handle
             p=get_param(h,'CompiledPortDataTypes');
             avalon1.avalon_source.signal{index}.name      = get(h,'PortName');
-            avalon1.avalon_source.signal{index}.data_type = p.Inport{1};
+            avalon1.avalon_source.signal{index}.data_type = parse_data_type(p.Inport{1});
             index = index + 1;
         end
     end
@@ -100,7 +100,7 @@ if (isempty(register_names)==0) % The avalon memory mapped interface exists
             register_name = get(h,'PortName');
             register_name = register_name(length('register_control_')+1:end);  % remove "register_control_" from name
             avalon1.avalon_memorymapped.register{index}.name      = register_name;
-            avalon1.avalon_memorymapped.register{index}.data_type = p.Outport{1};
+            avalon1.avalon_memorymapped.register{index}.data_type = parse_data_type(p.Outport{1});
             % register numbers start at 0, so we have to subtract 1
             avalon1.avalon_memorymapped.register{index}.reg_num   = index - 1;
             Nregisters = length(model_params.register);
@@ -133,7 +133,7 @@ if (isempty(conduit_names)==0)
             h = getSimulinkBlockHandle(conduit_name);  % get block handle
             p=get_param(h,'CompiledPortDataTypes');
             avalon1.conduit_input.signal{index}.name      = get(h,'PortName');
-            avalon1.conduit_input.signal{index}.data_type = p.Outport{1};
+            avalon1.conduit_input.signal{index}.data_type = parse_data_type(p.Outport{1});
             index = index + 1;
         end
     end
@@ -156,7 +156,7 @@ if (isempty(conduit_names)==0)
             h = getSimulinkBlockHandle(conduit_name);  % get block handle
             p=get_param(h,'CompiledPortDataTypes');
             avalon1.conduit_output.signal{index}.name      = get(h,'PortName');
-            avalon1.conduit_output.signal{index}.data_type = p.Inport{1};
+            avalon1.conduit_output.signal{index}.data_type = parse_data_type(p.Inport{1});
             index = index + 1;
         end
     end
@@ -183,3 +183,65 @@ end
 % because the termination has been deferred.  This can happen if an error
 % occurs in the function.
 eval([modelName,'([],[],[],''term'');']);  % terminate the compile mode
+
+end
+
+function typeinfo = parse_data_type(datatype)
+% parse_data_type Create a structure containing relevant type info from a datatype string
+%
+% examples of type strings: int16, uint8, ufix13_en5, sfix32_en28, boolean
+typeinfo = struct();
+
+typeinfo.type = datatype;
+
+% boolean
+if strcmp(typeinfo.type, 'boolean') 
+    typeinfo.width = 1;
+    typeinfo.fractional_bits = 0;
+    typeinfo.signed = false;
+
+% integer
+elseif ~isempty(strfind(typeinfo.type, 'int'))
+    % extract sign
+    if typeinfo.type(1) == 'u'
+        typeinfo.signed = false;
+    else
+        typeinfo.signed = true;
+    end
+
+    % extract width
+    width = str2double(regexp(typeinfo.type, '\d+', 'match'))
+    if length(width) == 1
+        typeinfo.width = width;
+        typeinfo.fractional_bits = 0;
+    else
+        error(['Malformed or unexpected fixed-point datatype string ', datatype])
+    end
+
+% fixed-point, but could be an integer (0 fractional bits)
+elseif ~isempty(strfind(typeinfo.type, 'fix'))
+
+    % extract sign; regexp returns a cell
+    signstr = typeinfo.type(1);
+    if signstr == 's'
+        typeinfo.signed = true;
+    elseif signstr == 'u'
+        typeinfo.signed = false;
+    else
+        error(['Could not extract sign from ', datatype])
+    end
+
+    % extact integer and fractional widths
+    widths = str2double(regexp(typeinfo.type, '\d+', 'match'));
+    if length(widths) == 1
+        % no fractional bits, so it's an integer
+        typeinfo.width = widths(1);
+        typeinfo.fractional_bits = 0;
+    elseif length(widths) == 2
+        typeinfo.width = widths(1);
+        typeinfo.fractional_bits = widths(2);
+    else
+        error(['Malformed or unexpected fixed-point datatype string ', datatype])
+    end
+end
+end

@@ -63,7 +63,7 @@ def create_entity(name, sink_enabled, sink, source_enabled, source,
         for signal in sink:
             datatype = convert_data_type(signal['data_type'])
             entity += indent*2 + (signal['name']).ljust(26, ' ') + ": in  " + datatype + "; --" +\
-                signal['data_type'] + '\n'
+                signal['data_type']['type'] + '\n'
 
 
     # avalon streaming source
@@ -71,7 +71,7 @@ def create_entity(name, sink_enabled, sink, source_enabled, source,
         for signal in source:
             datatype = convert_data_type(signal['data_type'])
             entity += indent*2 + signal['name'].ljust(26, ' ') + ": out " + datatype + "; --" +\
-                signal['data_type'] + '\n'
+                signal['data_type']['type'] + '\n'
 
     # avalon memorymapped bus
     if registers_enabled:
@@ -91,7 +91,7 @@ def create_entity(name, sink_enabled, sink, source_enabled, source,
             datatype = convert_data_type(signal['data_type'])
 
             entity += indent*2 + name.ljust(30, ' ') + ": in " + datatype + "; --" + \
-                signal['data_type'] + '\n'
+                signal['data_type']['type'] + '\n'
 
     # output conduit signals
     if conduit_out_enabled:
@@ -100,7 +100,7 @@ def create_entity(name, sink_enabled, sink, source_enabled, source,
             datatype = convert_data_type(signal['data_type'])
 
             entity += indent*2 + name.ljust(26, ' ') + ": out " + datatype + "; --" + \
-                signal['data_type'] + '\n'
+                signal['data_type']['type'] + '\n'
 
     # remove the semicolon from the last entity port definition
     semicolon_idx = entity.rfind(';')
@@ -206,21 +206,14 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
 
     return architecture
 
-def convert_data_type(intype):
+# TODO: rename this to create_datatype_string? 
+def convert_data_type(typedict):
     # TODO: add support for more data types (e.g. integer, signed, unsigned)?
-    if intype in {'boolean', 'ufix1'}:
-        outtype = 'std_logic'
+    if typedict['type'] in {'boolean', 'ufix1'}:
+        typestr = 'std_logic'
     else:
-        # extract the data width from the matlab datatype string (e.g. sfix32_en28)
-        match = re.search('\d+', intype)
-        if match:
-            width = int(match.group())
-            outtype = 'std_logic_vector({} downto 0)'.format(str(width-1).ljust(3, ' '))
-        else:
-            # TODO: error handling
-            pass
-
-    return outtype
+        typestr = 'std_logic_vector({} downto 0)'.format(str(typedict['width']-1).ljust(3, ' '))
+    return typestr
 
 def num_to_bitstring(value, tot_bits, frac_bits):
     # make value positive, then take the two's complement later if value is supposed to be negative
@@ -263,29 +256,29 @@ def create_component_declaration2(clock, entity, sink_flag, sink_signal, mm_flag
         for i in range(len(sink_signal)):
             name = sink_signal[i]["name"]
             data_type = sink_signal[i]["data_type"]
-            decl += (indent * 2 + name).ljust(32, ' ') + (": in  " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type + "\n"
+            decl += (indent * 2 + name).ljust(32, ' ') + (": in  " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type['type'] + "\n"
     if mm_flag == 1:
         for i in range(len(mm_signal)):
             # the vhdl that matlab generates has register_control prefixed to each register name, so we need to do the same
             name = "register_control_" + mm_signal[i]["name"]
             data_type = mm_signal[i]["data_type"]
-            decl += (indent * 2 + name).ljust(32, ' ') + (": in  " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type + "\n"
+            decl += (indent * 2 + name).ljust(32, ' ') + (": in  " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type['type'] + "\n"
     if ci_flag == 1:
         for i in range(len(ci_signal)):
             name = ci_signal[i]["name"]
             data_type = ci_signal[i]["data_type"]
-            decl += (indent * 2 + name).ljust(32, ' ') + (": in  " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type + "\n"
+            decl += (indent * 2 + name).ljust(32, ' ') + (": in  " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type['type'] + "\n"
     decl += (indent * 2 + "ce_out").ljust(32, ' ') + ": out std_logic;\n"
     if source_flag == 1:
         for i in range(len(source_signal)):
             name = source_signal[i]["name"]
             data_type = source_signal[i]["data_type"]
-            decl += (indent * 2 + name).ljust(32, ' ') + (": out " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type + "\n"
+            decl += (indent * 2 + name).ljust(32, ' ') + (": out " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type['type'] + "\n"
     if co_flag == 1:
         for i in range(len(co_signal)):
             name = co_signal[i]["name"]
             data_type = co_signal[i]["data_type"]
-            decl += (indent * 2 + name).ljust(32, ' ') + (": out " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type + "\n"
+            decl += (indent * 2 + name).ljust(32, ' ') + (": out " + convert_data_type(data_type) + ";").ljust(45, ' ') + " -- " + data_type['type'] + "\n"
     last_semi_ind = decl.rfind(";")
     decl = decl[:last_semi_ind] + ' ' + decl[last_semi_ind + 1:]
     decl += indent * 1 + ");\n"
@@ -303,30 +296,30 @@ def create_component_instantiation2(ts_system, entity, sink_flag, sink_signal, m
         for i in range(len(sink_signal)):
             name = sink_signal[i]["name"]
             data_type = sink_signal[i]["data_type"]
-            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name + ",").ljust(32, ' ') + " -- " + data_type + "\n"
+            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name + ",").ljust(32, ' ') + " -- " + data_type['type'] + "\n"
     if mm_flag == 1:
         for i in range(len(mm_signal)):
             name = "register_control_" + mm_signal[i]["name"]
             name2 = mm_signal[i]["name"]
-            data_type = sink_signal[i]["data_type"]
-            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name2 + ",").ljust(32, ' ') + " -- " + data_type + "\n"
+            data_type = mm_signal[i]["data_type"]
+            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name2 + ",").ljust(32, ' ') + " -- " + data_type['type'] + "\n"
     if ci_flag == 1:
         for i in range(len(ci_signal)):
             name = ci_signal[i]["name"]
             name2 = name.replace("Export_", "")
-            data_type = sink_signal[i]["data_type"]
-            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name2 + ",").ljust(32, ' ') + " -- " + data_type + "\n"
+            data_type = ci_signal[i]["data_type"]
+            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name2 + ",").ljust(32, ' ') + " -- " + data_type['type'] + "\n"
     if source_flag == 1:
         for i in range(len(source_signal)):
             name = source_signal[i]["name"]
-            data_type = sink_signal[i]["data_type"]
-            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name + ",").ljust(32, ' ') + " -- " + data_type + "\n"
+            data_type = source_signal[i]["data_type"]
+            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name + ",").ljust(32, ' ') + " -- " + data_type['type'] + "\n"
     if co_flag == 1:
         for i in range(len(co_signal)):
             name = co_signal[i]["name"]
             name2 = name.replace("Export_", "")
-            data_type = sink_signal[i]["data_type"]
-            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name2 + ",").ljust(32, ' ') + " -- " + data_type + "\n"
+            data_type = co_signal[i]["data_type"]
+            inst += (indent * 2 + name).ljust(32, ' ') + "=>  " + (name2 + ",").ljust(32, ' ') + " -- " + data_type['type'] + "\n"
     last_comma_ind = inst.rfind(',')
     inst = inst[:last_comma_ind] + ' ' + inst[last_comma_ind + 1:]
     inst += indent * 1 + ");\n"
@@ -343,9 +336,11 @@ def create_component_reg_defaults(mm_flag, mm_signal):
             name2 = name.replace("Register_Control_", "")
             def_val = mm_signal[i]["default_value"]
             datatype = mm_signal[i]["data_type"]
+            typestr = datatype['type']
 
             (value_str, data_width) = convert_default_value(def_val, datatype)
-            reg_defs.append(name2.ljust(24, ' ') + "  <=  " + value_str + "; -- " + str(def_val))
+            reg_defs.append(name2.ljust(24, ' ') + "  <=  " + value_str +
+                "; -- " + str(def_val) + " (" + typestr + ")") 
             data_widths.append(data_width)
 
     return (reg_defs, data_widths)
@@ -356,18 +351,12 @@ def convert_default_value(value, datatype):
     is_bool = False
     data_width = 32
 
-    if datatype == 'boolean':
+    if datatype['type'] == 'boolean':
         is_bool = True
         data_width = 1
     else:
-        # parse the data type string
-        match = re.findall('\d+', datatype)
-        data_width = int(match[0])
-        try:
-            frac_width = int(match[1])
-        except:
-            # no fractional part, so the data type is an int
-            is_int = True
+        data_width = datatype['width']
+        frac_width = datatype['fractional_bits']
 
     # create the default value string
     if is_int:
