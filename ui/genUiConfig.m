@@ -28,7 +28,9 @@ uiConfig.module = mp.model_name;
 registerControls = createControlObject(mp.register(1));
 pageName = mp.register(1).uiPageName;
 panelName = mp.register(1).uiPanelName;
-panel = {struct('name', panelName, 'controls', registerControls)};
+controls = {registerControls};
+panel = {struct('name', panelName)};
+panel{1}.controls = controls;
 uiConfig.pages = {struct('name', pageName, 'panels', ...
     {panel})};
     
@@ -52,16 +54,21 @@ for i=2:length(mp.register)
             %       even a good way to append to normal arrays either... 
             %       To append to a cell array, you need to index into a new cell
             registerIdx = length(uiConfig.pages{pageIdx}.panels{panelIdx}.controls) + 1;
-            uiConfig.pages{pageIdx}.panels{panelIdx}.controls(registerIdx) = registerControls;
+            uiConfig.pages{pageIdx}.panels{panelIdx}.controls{registerIdx} = registerControls;
         else
             % panel doesn't exist, so create one and add the register controls
-            uiConfig.pages{pageIdx}.panels = {uiConfig.pages{pageIdx}.panels, ...
-                struct('name', panelName, 'controls', registerControls)};
+            panelIdx = length(uiConfig.pages{pageIdx}.panels) + 1;
+            panel = {struct('name', panelName)};
+            panel{1}.controls = {registerControls};
+            uiConfig.pages{pageIdx}.panels{panelIdx} = panel{1};
+            
         end
     else
         % page doesn't exist, so create a new page and panel for the register controls
-        uiConfig.pages = {uiConfig.pages struct('name', pageName, 'panels', ...
-            struct('name', panelName, 'controls', registerControls))};
+        panel = {struct('name', panelName)};
+        panel{1}.controls = {registerControls};
+        pageIdx = length(uiConfig.pages) + 1;
+        uiConfig.pages{pageIdx} = struct('name', pageName, 'panels', {panel});
     end
 end
         
