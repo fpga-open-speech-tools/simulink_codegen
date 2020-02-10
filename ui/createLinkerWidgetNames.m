@@ -29,7 +29,7 @@ numWidgets = containers.Map();
 for i = 1:length(mp.register)
     % keep track of how many registers have a given widget type so 
     % we can increment the widget name accordingly
-    widgetType = mp.register(i).widget_type;
+    widgetType = mp.register(i).widgetType;
     if numWidgets.isKey(widgetType)
         numWidgets(widgetType) = numWidgets(widgetType) + 1;
     else
@@ -38,6 +38,6 @@ for i = 1:length(mp.register)
 
     % widget name is of the form: slider<#><model name>
     widgetName = [widgetType, num2str(numWidgets(widgetType)), mp.model_name];
-    mp.register(i).widget_name = widgetName;
+    mp.register(i).widgetName = widgetName;
 
 end

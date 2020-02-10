@@ -95,14 +95,14 @@ function controlObject = createControlObject(register)
 %   register = register struct from Simulink model init scripts
 % Outputs:
 %   controlObject = register info packed into a struct for json UI config file
-controlObject.linkerName = register.widget_name;
-controlObject.type = register.widget_type;
+controlObject.linkerName = register.widgetName;
+controlObject.type = register.widgetType;
 controlObject.min = register.min;
 controlObject.max = register.max;
 controlObject.dataType = register.dataType.qpointstr;
 controlObject.defaultValue = register.default;
-controlObject.units = register.widget_display_units;
-controlObject.style = register.widget_style;
+controlObject.units = register.widgetDisplayUnits;
+controlObject.style = register.widgetStyle;
 end
 
 function idx = findFieldValue(arrayOfStruct, field, value)

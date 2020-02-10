@@ -117,6 +117,7 @@ if isunix
     !make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- 
 else
     disp('Kernel module needs to be manually built in a Linux environment.')
+end
 
 % TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
 %       This file shouldn't live in the vhdl folder anymore.

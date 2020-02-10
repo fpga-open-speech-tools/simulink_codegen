@@ -34,7 +34,7 @@ links = struct();
 
 % map widget name to sysfs file
 for register = mp.register
-    links.(register.widget_name) = ['/', register.name];
+    links.(register.widgetName) = ['/', register.name];
 end
 
 linkerConfig.(mp.model_name).links = links;
