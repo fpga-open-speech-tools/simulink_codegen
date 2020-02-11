@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-# @file gen_makefile.py
+# @file combine_linker_configs.py
 #
-#     Python function to auto generate files used to build kernel modules
+#     Script to combine multiple linker json files into one file
 #
 #     @author Trevor Vannoy
 #     @date 2020
@@ -40,11 +40,9 @@ def main(configs, outfile='linker.json', verbose=False):
     combined = {}
 
     for config in configs:
-        config_dict = json.load(open(config))
-        for key in config_dict.keys():
-            if verbose:
-                print('adding {} to linker'.format(key))
-            combined[key] = config_dict[key]
+        with open(config) as fd:
+            config_dict = json.load(fd)
+            combined.update(config_dict)
 
     if verbose:
         print('\n')
