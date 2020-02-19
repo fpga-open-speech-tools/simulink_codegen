@@ -34,8 +34,8 @@ uiConfig.module = mp.model_name;
 
 % create the first page and panel
 registerControls = createControlObject(mp.register(1));
-pageName = mp.register(1).uiPageName;
-panelName = mp.register(1).uiPanelName;
+pageName = formatTitle(mp.register(1).uiPageName);
+panelName = formatTitle(mp.register(1).uiPanelName);
 controls = {registerControls};
 panel = {struct('name', panelName)};
 panel{1}.controls = controls;
@@ -46,8 +46,8 @@ uiConfig.pages = {struct('name', pageName, 'panels', ...
 % add the rest of the registers to the UI config
 for i=2:length(mp.register)
     registerControls = createControlObject(mp.register(i));
-    pageName = mp.register(i).uiPageName;
-    panelName = mp.register(i).uiPanelName;
+    pageName = formatTitle(mp.register(i).uiPageName);
+    panelName = formatTitle(mp.register(i).uiPanelName);
 
     % check if the desired page already exists
     pageIdx = findFieldValue(uiConfig.pages, 'name', pageName);
@@ -103,6 +103,7 @@ controlObject.dataType = register.dataType.qpointstr;
 controlObject.defaultValue = register.default;
 controlObject.units = register.widgetDisplayUnits;
 controlObject.style = register.widgetStyle;
+controlObject.title = formatTitle(register.name);
 end
 
 function idx = findFieldValue(arrayOfStruct, field, value)
@@ -129,3 +130,19 @@ for i = 1:length(arrayOfStruct)
     end
 end
 end
+
+function s = formatTitle(str)
+    % split string into words
+    words = split(str, [" " "_" "-"]);
+
+    % capitalize each word
+    words = cellfun(@(s) [upper(s(1)) s(2:end)], words, 'uniformoutput', false);
+
+    % put the words back together with spaces in between
+    s = join(words, ' ');
+
+    % turn cell array into character array (string)
+    s = s{:};
+end
+
+    
