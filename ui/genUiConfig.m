@@ -2,6 +2,14 @@
 %
 % genUiConfig(mp, outfile)
 %
+% This function generates a json file that can be used to autogenerate 
+% GUI controls at runtime. To generate GUI controls at runtime, the 
+% generated json file needs to be called UI.json and be in the same 
+% directory as the nodejs server on the HPS. 
+%
+% To create a GUI that controls multiple Simulink models running on
+% an FPGA, the individual UI json files for each model need to be 
+% combined into one json file with combine_ui_configs.py
 %
 % Inputs:
 %   mp = simulink model parameters struct
@@ -30,10 +38,14 @@ function genUiConfig(mp, outfile)
 %       would create the intended data structure. The data structure creation 
 %       in this function could probably be cleaner...
 
-uiConfig.module = mp.model_name;
+% The GUI name defaults to the model name, but can be changed
+% when running combine_ui_configs.py
+uiConfig.name = mp.model_name;
+
+module = mp.model_name;
 
 % create the first page and panel
-registerControls = createControlObject(mp.register(1));
+registerControls = createControlObject(mp.register(1), module);
 pageName = formatTitle(mp.register(1).uiPageName);
 panelName = formatTitle(mp.register(1).uiPanelName);
 controls = {registerControls};
@@ -45,7 +57,7 @@ uiConfig.pages = {struct('name', pageName, 'panels', ...
 
 % add the rest of the registers to the UI config
 for i=2:length(mp.register)
-    registerControls = createControlObject(mp.register(i));
+    registerControls = createControlObject(mp.register(i), module);
     pageName = formatTitle(mp.register(i).uiPageName);
     panelName = formatTitle(mp.register(i).uiPanelName);
 
@@ -84,26 +96,28 @@ writejson(uiConfig, outfile);
 end
 
     
-function controlObject = createControlObject(register)
+function control = createControlObject(register, module)
 % createControlObject Assemble register info into a struct
 %
-% controlObject = createControlObject(register)
+% control = createControlObject(register, module)
 %
 % This function essentially just renames some fields in the register struct
 %
 % Inputs:
 %   register = register struct from Simulink model init scripts
+%   module = the model / device driver name
 % Outputs:
-%   controlObject = register info packed into a struct for json UI config file
-controlObject.linkerName = register.widgetName;
-controlObject.type = register.widgetType;
-controlObject.min = register.min;
-controlObject.max = register.max;
-controlObject.dataType = register.dataType.qpointstr;
-controlObject.defaultValue = register.default;
-controlObject.units = register.widgetDisplayUnits;
-controlObject.style = register.widgetStyle;
-controlObject.title = formatTitle(register.name);
+%   control = register info packed into a struct for json UI config file
+control.linkerName = register.widgetName;
+control.type = register.widgetType;
+control.min = register.min;
+control.max = register.max;
+control.dataType = register.dataType.qpointstr;
+control.defaultValue = register.default;
+control.units = register.widgetDisplayUnits;
+control.style = register.widgetStyle;
+control.title = formatTitle(register.name);
+control.module = module;
 end
 
 function idx = findFieldValue(arrayOfStruct, field, value)
@@ -132,17 +146,31 @@ end
 end
 
 function s = formatTitle(str)
-    % split string into words
-    words = split(str, [" " "_" "-"]);
+% formatTitle Format strings into "Title Case"
+%
+% s = formatTitle(str)
+%
+% Formats strings into by separating words and capitalizing 
+% each word. This is used for display purposes because we would 
+% rather display "Some Register Name" than "some_register_name" in GUIs.
+% This function only works on strings where words are separated by
+% spaces, hyphens, or underscores.
+%
+% Inputs:
+%   str = the string to format
+% Outputs:
+%   s = the formatted string
 
-    % capitalize each word
-    words = cellfun(@(s) [upper(s(1)) s(2:end)], words, 'uniformoutput', false);
+% TODO: add support for camelCase and TitleCase strings?
+% split string into words
+words = split(str, [" " "_" "-"]);
 
-    % put the words back together with spaces in between
-    s = join(words, ' ');
+% capitalize each word
+words = cellfun(@(s) [upper(s(1)) s(2:end)], words, 'uniformoutput', false);
 
-    % turn cell array into character array (string)
-    s = s{:};
+% put the words back together with spaces in between
+s = join(words, ' ');
+
+% turn cell array into character array (string)
+s = s{:};
 end
-
-    
