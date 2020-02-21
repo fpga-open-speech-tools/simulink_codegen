@@ -66,7 +66,7 @@ save([avalon.entity '_avalon'], 'avalon')
 %% Create UI config files
 disp('Creating linker json file.')
 mp = createLinkerWidgetNames(mp);
-genLinkerConfig(mp, ['linker_', mp.model_name, '.json']);
+genLinkerConfig(mp, ['Linker_', mp.model_name, '.json']);
 disp('Creating UI config json file.')
 genUiConfig(mp, ['UI_', mp.model_name, '.json']);
 

@@ -23,7 +23,7 @@
 import json
 import argparse
 
-def main(configs, outfile='linker.json', verbose=False):
+def main(configs, outfile='Linker.json', verbose=False):
     """
     Combine multiple linker json files into one.
 
@@ -63,7 +63,7 @@ def parseargs():
     parser.add_argument('configs',
         help="list of linker files to combine", nargs='+')
     parser.add_argument('-o', '--outfile',
-        help="name of combined linker json file", default='linker.json')
+        help="name of combined linker json file", default='Linker.json')
     parser.add_argument('-v', '--verbose', action='store_true', 
         help="verbose output")
     args = parser.parse_args()
