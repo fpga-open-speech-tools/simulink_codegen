@@ -885,13 +885,13 @@ set_project_property HIDE_FROM_IP_CATALOG {false}
 class qsys_templates:
     custom_component_header =(
         "# # # # # # # # # # # # # # # # # # # # # #\n"
-        "# Custom Components "
+        "# Custom Components \n"
         "# # # # # # # # # # # # # # # # # # # # # #\n\n"
         )
     def __init__(self, num_custom_components):
         self.custom_components_added = 0
         self.num_custom_components = num_custom_components
-        self.de10_components_base_address = 18 # Format is 0x0018
+        self.de10_components_base_address = 20 # Format is 0x0020
         self.last_component_added = ""
     def de10_base_component_instantiation(self, quartus_version):
         return de10_base_instantiation_template.replace("quartus_version", quartus_version)
@@ -906,16 +906,14 @@ class qsys_templates:
         return de10_base_connections
 
     def add_de10_custom_component_connections(self, component_name):
-        print("I made it in " + component_name)
-        component_base_address = "0x00" + str(self.de10_components_base_address + self.custom_components_added) 
+        # Increment address by 0x10
+        component_base_address = "0x00" + str(self.de10_components_base_address + self.custom_components_added * 10) 
         built_string = de10_custom_component_base_connections_template.replace("component_name", component_name).replace("component_base_address", component_base_address)
         
         if(self.custom_components_added == 0):
-            print("I made it in")
             built_string += qsys_templates.custom_component_header
             built_string += de10_custom_component_initial_audio_in_connection_template.replace("component_name", component_name)
         if((self.custom_components_added + 1) == self.num_custom_components):
-            print("I made it in")
             built_string += de10_custom_component_final_audio_out_connection_template.replace("component_name", component_name)
             self.custom_components_added = 0        
             return built_string
@@ -943,9 +941,12 @@ class qsys_templates:
         Returns:
             [type] -- [description]
         """
+        qsys_version = self.extract_qsys_version(quartus_version)
+        return quartus_settings_template.replace("qsys_version", qsys_version).replace("system_name", system_name).replace("device_family", device_family).replace("device", device)
+    def extract_qsys_version(self, quartus_version):
         qsys_version = str(int(quartus_version[:2]) - 2)
         if(len(quartus_version) == 4):
             qsys_version += quartus_version[2:]
         else:
             qsys_version += ".0"
-        return quartus_settings_template.replace("qsys_version", qsys_version).replace("system_name", system_name).replace("device_family", device_family).replace("device", device)
+        return qsys_version
