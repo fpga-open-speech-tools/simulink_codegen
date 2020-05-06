@@ -7,6 +7,7 @@
     <!--      ** means perform a recursive descent,  * means find any IP file while performing the recursive descent.                              -->
     <!--      When the search is recursive, the search stops at any directory that contains a _hw.tcl or .ipx file.                                -->
     <!--      https://www.altera.com/documentation/zcn1513987282935.html#mwh1409958678312                                                          -->
-    <path path="../component_library/**/*" />
-    <!-- <path path="../simulink_models/**/*" /> -->
+    <path path="../../../../../component_library/**/*" />
+    <path path="../../../component_library/**/*" />
+    <!-- <path path="../../simulink_models/**/*" /> -->
 </library>

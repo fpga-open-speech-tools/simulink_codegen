@@ -22,7 +22,7 @@
          type = "boolean";
       }
    }
-   element PLL_using_AD1939_MCLK
+   element pll_using_AD1939_MCLK
    {
       datum _sortIndex
       {
@@ -423,7 +423,7 @@
    dir="end" />
  <interface
    name="ad1939_mclk"
-   internal="PLL_using_AD1939_MCLK.refclk"
+   internal="pll_using_AD1939_MCLK.refclk"
    type="clock"
    dir="end" />
  <interface
@@ -476,7 +476,7 @@
    version="1.0"
    enabled="1" />
  <module
-   name="PLL_using_AD1939_MCLK"
+   name="pll_using_AD1939_MCLK"
    kind="altera_pll"
    version="18.0"
    enabled="1">
@@ -1363,7 +1363,7 @@
  <connection
    kind="clock"
    version="18.0"
-   start="PLL_using_AD1939_MCLK.outclk0"
+   start="pll_using_AD1939_MCLK.outclk0"
    end="FE_Qsys_AD1939_Audio_Mini_v1_0.sys_clk" />
  <connection
    kind="interrupt"
@@ -1396,7 +1396,7 @@
    kind="reset"
    version="18.0"
    start="clk_hps.clk_reset"
-   end="PLL_using_AD1939_MCLK.reset" />
+   end="pll_using_AD1939_MCLK.reset" />
  <connection
    kind="reset"
    version="18.0"

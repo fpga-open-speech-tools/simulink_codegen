@@ -58,6 +58,8 @@ avalon.model_name           = mp.model_name;
 avalon.model_abbreviation   = mp.model_abbreviation;
 avalon.linux_device_name    = mp.linux_device_name;
 avalon.linux_device_version = mp.linux_device_version;
+avalon.quartus_path         = mp.quartus_path;
+avalon.target_system        = mp.target_system;
 
 %% Save the avalon structure to a json file and a .mat file
 writejson(avalon, [avalon.entity,'.json'])
@@ -83,7 +85,7 @@ disp('vgen: Creating .tcl script for Platform Designer.')
 infile = [avalon.entity '.json'];
 % NOTE: platform designer only adds components if they have the _hw.tcl suffix
 outfile = [hdlpath filesep avalon.entity '_avalon_hw.tcl'];
-vgenTcl(infile, outfile, hdlpath);
+vgenTcl(infile, outfile, hdlpath)
 disp(['      created tcl file: ' outfile])
 
 %% Generate the device driver code

@@ -28,7 +28,7 @@ def create_mm_connection_point(input_struct):
     built_string += "set_interface_property " + mmname + " CMSIS_SVD_VARIABLES \"\"\n"
     built_string += "set_interface_property " + mmname + " SVD_ADDRESS_GROUP \"\"\n\n"
 
-    built_string += "add_interface_port " + mmname + " " + mmname + "_address address Input " + str(input_struct.address_bus_size) + "\n"
+    built_string += "add_interface_port " + mmname + " " + mmname + "_address address Input " + str(input_struct.address_bus_size if input_struct.address_bus_size > 0 else 1) + "\n"
     built_string += "add_interface_port " + mmname + " " + mmname + "_read read Input 1\n"
     built_string += "add_interface_port " + mmname + " " + mmname + "_readdata readdata Output " + str(input_struct.data_bus_size) + "\n"
     built_string += "add_interface_port " + mmname + " " + mmname + "_write write Input 1\n"

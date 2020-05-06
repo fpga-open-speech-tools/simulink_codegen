@@ -838,27 +838,28 @@ set_connection_parameter_value hps.h2f_lw_axi_master/jtag_uart.avalon_jtag_slave
 
 '''
 
-de10_custom_component_base_connections_template='''
-add_connection PLL_using_AD1939_MCLK.outclk0 component_name_0.clock
-add_connection clk_hps.clk_reset component_name_0.reset
-add_connection hps.h2f_lw_axi_master component_name_0.avalon_slave
-set_connection_parameter_value hps.h2f_lw_axi_master/component_name_0.avalon_slave arbitrationPriority {1}
-set_connection_parameter_value hps.h2f_lw_axi_master/component_name_0.avalon_slave baseAddress {component_base_address}
-set_connection_parameter_value hps.h2f_lw_axi_master/component_name_0.avalon_slave defaultConnection {0}
+custom_component_base_connections_template='''
+add_connection pll_using_AD1939_MCLK.outclk0 component_name_0.clock
+add_connection clock_name.clk_reset component_name_0.reset
+add_connection hps_name.h2f_lw_axi_master component_name_0.avalon_slave
+set_connection_parameter_value hps_name.h2f_lw_axi_master/component_name_0.avalon_slave arbitrationPriority {1}
+set_connection_parameter_value hps_name.h2f_lw_axi_master/component_name_0.avalon_slave baseAddress {component_base_address}
+set_connection_parameter_value hps_name.h2f_lw_axi_master/component_name_0.avalon_slave defaultConnection {0}
 '''
-de10_custom_component_initial_audio_in_connection_template='''
+custom_component_initial_audio_in_connection_template='''
 add_connection FE_Qsys_AD1939_Audio_Mini_v1_0.Line_In component_name_0.avalon_streaming_sink
 '''
-de10_custom_component_audio_in_connection_template='''
+custom_component_audio_in_connection_template='''
 add_connection last_component_name.avalon_streaming_source component_name_0.avalon_streaming_sink
 '''
-de10_custom_component_final_audio_out_connection_template='''
+custom_component_final_audio_out_connection_template='''
 add_connection component_name_0.avalon_streaming_source FE_Qsys_AD1939_Audio_Mini_v1_0.Headphone_Out
 '''
 
 custom_component_instantiation_template = "add_instance component_name_0 component_name 1.0\n"
 
-de_10_interconnect_requirements_template = """
+## Verify for arria10
+interconnect_requirements_template = """
 # interconnect requirements
 set_interconnect_requirement {$system} {qsys_mm.clockCrossingAdapter} {HANDSHAKE}
 set_interconnect_requirement {$system} {qsys_mm.maxAdditionalLatency} {1}
@@ -880,6 +881,23 @@ create_system {system_name}
 set_project_property DEVICE_FAMILY {device_family}
 set_project_property DEVICE {device}
 set_project_property HIDE_FROM_IP_CATALOG {false}
+"""
+
+quartus_project_template = """
+set project audio_effect
+set target_system target_name
+load_package flow
+
+project_new $project -revision $target_system -overwrite
+
+source ${target_system}_proj.tcl
+
+#Add files here
+files_list
+
+# compile the project
+execute_flow -compile
+project_close
 """
 
 class qsys_templates:
@@ -905,27 +923,43 @@ class qsys_templates:
     def add_de10_base_connections(self):
         return de10_base_connections
 
-    def add_de10_custom_component_connections(self, component_name):
+    def add_de10_custom_component_connections(self, component_name, target = "de10"):
+        print(target)
+        if target == "arria10":
+            hps_name = "arria10_hps_0"
+            ad1939_name = "Research"
+            clock_name = "clk_1"
+        elif target == "de10":
+            hps_name = "hps"
+            ad1939_name = "Mini"
+            clock_name = "clk_hps"
+        else:
+            print("Invalid target: " + target)
+            return
         # Increment address by 0x10
         component_base_address = "0x00" + str(self.de10_components_base_address + self.custom_components_added * 10) 
-        built_string = de10_custom_component_base_connections_template.replace("component_name", component_name).replace("component_base_address", component_base_address)
+        built_string = custom_component_base_connections_template \
+        .replace("component_name", component_name) \
+        .replace("component_base_address", component_base_address) \
+        .replace("hps_name", hps_name) \
+        .replace("clock_name", clock_name)
         
         if(self.custom_components_added == 0):
             built_string += qsys_templates.custom_component_header
-            built_string += de10_custom_component_initial_audio_in_connection_template.replace("component_name", component_name)
+            built_string += custom_component_initial_audio_in_connection_template.replace("component_name", component_name).replace("Mini", ad1939_name)
         if((self.custom_components_added + 1) == self.num_custom_components):
-            built_string += de10_custom_component_final_audio_out_connection_template.replace("component_name", component_name)
+            built_string += custom_component_final_audio_out_connection_template.replace("component_name", component_name).replace("Mini", ad1939_name)
             self.custom_components_added = 0        
             return built_string
         
-        built_string += de10_custom_component_audio_in_connection_template.replace("component_name", component_name).replace("last_component_name", self.last_component_added)
+        built_string += custom_component_audio_in_connection_template.replace("component_name", component_name).replace("last_component_name", self.last_component_added)
         
         self.last_component_added = component_name
         self.custom_components_added += 1
 
         return built_string
     def add_de10_interconnect_requirements(self, system_name):
-        return de_10_interconnect_requirements_template.replace("system_name", system_name)
+        return interconnect_requirements_template.replace("system_name", system_name)
     def add_created_by_function_header(self, function):
         return created_by_function_header_template.replace("function", function.__name__)
     def add_quartus_settings(self, quartus_version, system_name, device_family, device):
@@ -943,6 +977,17 @@ class qsys_templates:
         """
         qsys_version = self.extract_qsys_version(quartus_version)
         return quartus_settings_template.replace("qsys_version", qsys_version).replace("system_name", system_name).replace("device_family", device_family).replace("device", device)
+    def add_quartus_project(self, system_name, target):
+        if target == "arria10":
+            top_file = "A10SoM_System.vhd"
+            qip_file = f"{system_name}/{system_name}.qip"
+        elif target == "de10":
+            top_file = "DE10Nano_System.vhd"
+            qip_file = f"{system_name}/synthesis/{system_name}.qip"
+        
+        files = f"\nset_global_assignment -name QIP_FILE {qip_file}\n"
+        files += f"\nset_global_assignment -name VHDL_FILE {top_file}\n"
+        return quartus_project_template.replace("audio_effect", system_name).replace("target_name", target).replace("files_list", files)
     def extract_qsys_version(self, quartus_version):
         qsys_version = str(int(quartus_version[:2]) - 2)
         if(len(quartus_version) == 4):

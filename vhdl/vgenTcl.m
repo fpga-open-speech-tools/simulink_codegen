@@ -30,5 +30,8 @@
 function vgenTcl(infile, outfile, additionalFilesetAbsDir)
 
 % call the python file that autogens the tcl script
-py.autogen_tcl.main(infile, outfile, additionalFilesetAbsDir)
-
+try
+    py.autogen_tcl.main(infile, outfile, additionalFilesetAbsDir)
+catch e
+    disp(getReport(e))
+end
