@@ -85,7 +85,7 @@ disp('vgen: Creating .tcl script for Platform Designer.')
 infile = [avalon.entity '.json'];
 % NOTE: platform designer only adds components if they have the _hw.tcl suffix
 outfile = [hdlpath filesep avalon.entity '_avalon_hw.tcl'];
-vgenTcl(infile, outfile, hdlpath)
+vgenQuartus(infile, outfile, hdlpath)
 disp(['      created tcl file: ' outfile])
 
 %% Generate the device driver code
@@ -107,9 +107,19 @@ disp(['      created Kbuild: ' [hdlpath filesep 'Kbuild']])
 %       with Quartus' embedded command shell instead?
 disp('Building kernel module.')
 cd(hdlpath)
-!make clean
-!make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- 
-
+if ispc
+    if system('wsl.exe cd') == 0 
+        !wsl.exe make clean
+        !wsl.exe make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+    else
+        disp("Windows Subsystem for Linux is currently required to automate building kernel modules")
+    end
+elseif isunix
+    !make clean
+    !make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+else
+    disp('The current operating system is unsupported for automatically building kernel modules')
+end
 % TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
 %       This file shouldn't live in the vhdl folder anymore.
 
