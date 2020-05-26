@@ -16,7 +16,7 @@ from quartus.quartus_workflow import execute_quartus_workflow
 
 import os
 def main(inputFilename, outputFilename, additionalFilesetAbsDir):
-    input_struct = parse_json(additionalFilesetAbsDir + "\\..\\..\\" + inputFilename)
+    input_struct = parse_json(additionalFilesetAbsDir + "/../../" + inputFilename)
     populate_additional_filesets(input_struct, additionalFilesetAbsDir)
     write_tcl(input_struct, outputFilename)
     execute_quartus_workflow(input_struct, get_working_dir(additionalFilesetAbsDir))
@@ -34,9 +34,9 @@ def write_tcl(input_struct, outputFilename):
         out_file.write(create_source_connection_point(input_struct))
 
 def get_working_dir(dir):
-    if not(dir.endswith("\\")):
-        dir += "\\"
-    return dir + "quartus\\"
+    if not(dir.endswith("/")):
+        dir += "/"
+    return dir + "quartus/"
         
 if __name__ == "__main__":
     main('MNR_dataplane.json', "C:\\Users\\wickh\\Documents\\NIH\\simulink_models\\models\\short_window_mean_reduction\\hdlsrc\\MNR\\MNR_dataplane_avalon_hw.tcl", "C:\\Users\\wickh\\Documents\\NIH\\simulink_models\\models\\short_window_mean_reduction\\hdlsrc\\MNR")

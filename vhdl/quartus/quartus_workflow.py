@@ -123,7 +123,7 @@ def gen_qsys_file(tcl_file, working_dir):
         Working directory of the generation process
     """
     #TODO: Updates search path from being a hardcoded (relative) path 
-    cmd = f'cd {working_dir} & ' + 'qsys-script ' + f"--script={tcl_file} " + f"--search-path=\"..\\..\\..\\..\\..\\component_library\\**\\*,$\" "
+    cmd = f'cd {working_dir} & ' + 'qsys-script ' + f'--script={tcl_file} ' + f'--search-path="../../../../../component_library/**/*,$" '
     log_file_path = working_dir + "qsys_script.log"
     log_msg = "Generating qsys file from tcl file"
     run_cmd_and_log(cmd, log_msg, log_file_path)
@@ -138,7 +138,7 @@ def gen_qsys_system(qsys_file, working_dir):
     working_dir : string
         Working directory of the generation process
     """
-    cmd = f'cd {working_dir} & qsys-generate --synthesis=VHDL --search-path=\"..\\component_library\\**\\*,$\"  {qsys_file}'
+    cmd = f'cd {working_dir} & qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {qsys_file}'
     log_file_path = working_dir + "qsys_gen.log"
     log_msg = "Generating system"
     run_cmd_and_log(cmd, log_msg, log_file_path)
@@ -181,9 +181,9 @@ def gen_pll_qsys(working_dir):
         Working directory of the generation process
     """
     pll_file = "pll.qsys"
-    copyfile(RES_DIR + "\\res\\" + pll_file, working_dir + pll_file)
+    copyfile(RES_DIR + "/res/" + pll_file, working_dir + pll_file)
     log_msg = "Generating pll"
-    cmd =  f'cd {working_dir} & qsys-generate --synthesis=VHDL --search-path=\"..\\component_library\\**\\*,$\"  {pll_file}'
+    cmd =  f'cd {working_dir} & qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {pll_file}'
     log_file_path = working_dir + "pll_gen.log"
     
     run_cmd_and_log(cmd, log_msg, log_file_path)
@@ -214,7 +214,7 @@ def gen_rbf(working_dir, target_system):
     """
     log_msg = "Generating rbf file"
     # Command uses -m FPP for the fast passive parallel which ends up being equivalent to passive parallel x16
-    cmd = f"cd {working_dir}\\output_files & quartus_cpf -c -m FPP {target_system}.sof {target_system}.rbf"
+    cmd = f"cd {working_dir}/output_files & quartus_cpf -c -m FPP {target_system}.sof {target_system}.rbf"
     log_file_path = working_dir + "rbf_gen.log"
     
     run_cmd_and_log(cmd, log_msg, log_file_path)
@@ -242,7 +242,7 @@ def execute_quartus_workflow(config, working_dir = ""):
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     global RES_DIR
-    RES_DIR = os.path.dirname(abspath) + "\\res\\"
+    RES_DIR = os.path.dirname(abspath) + "/res/"
     
     tcl_file = target.system_name + ".tcl"
     qsys_file = target.system_name + ".qsys"
