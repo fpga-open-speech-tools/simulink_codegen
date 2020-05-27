@@ -7,15 +7,15 @@ from quartus.quartus_workflow import execute_quartus_workflow
 
 def main(inputFilename, additionalFilesetAbsDir):
     input_struct = parse_json(
-        additionalFilesetAbsDir + "\\..\\..\\" + inputFilename)
+        additionalFilesetAbsDir + "/../../" + inputFilename)
     execute_quartus_workflow(
         input_struct, get_working_dir(additionalFilesetAbsDir))
 
 
 def get_working_dir(dir):
-    if not(dir.endswith("\\")):
-        dir += "\\"
-    return dir + "quartus\\"
+    if not(dir.endswith("/")):
+        dir += "/"
+    return dir + "quartus/"
 
 
 def parseargs():
