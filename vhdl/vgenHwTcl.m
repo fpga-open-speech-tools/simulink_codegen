@@ -27,12 +27,11 @@
 % Bozeman, MT 59718
 % support@flatearthinc.com
 
-function vgenQuartus(infile, additionalFilesetAbsDir)
+function vgenHwTcl(infile, outfile, additionalFilesetAbsDir)
 
 % call the python file that autogens the tcl script
 try
-    disp(['Follow status in log files generated in ' additionalFilesetAbsDir])
-    py.autogen_quartus.main(infile, additionalFilesetAbsDir)
+    py.create_hw_tcl.main(infile, outfile, additionalFilesetAbsDir)
 catch e
     disp(getReport(e))
 end

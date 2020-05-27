@@ -402,21 +402,21 @@ begin
             ad1939_physical_dsdata1             => AD1939_DAC_DSDATA1,
 				
 				-- -- HPS SPI connection to AD1939
-            -- hps_spim0_txd                       => AD1939_spi_CIN,                                                        
-            -- hps_spim0_rxd                       => AD1939_spi_COUT,                                                        
-            -- hps_spim0_ss_in_n                   => '1',                                                 
-            -- hps_spim0_ssi_oe_n                  => open,                                                  
-            -- hps_spim0_ss_0_n                    => HPS_spi_ss_n,                                                     
-            -- hps_spim0_ss_1_n                    => open,                                                     
-            -- hps_spim0_ss_2_n                    => open,                                                    
-            -- hps_spim0_ss_3_n                    => open,                                                     
-            -- hps_spim0_sclk_out_clk    				=> AD1939_spi_CCLK,
+            hps_spim0_txd                       => AD1939_spi_CIN,                                                        
+            hps_spim0_rxd                       => AD1939_spi_COUT,                                                        
+            hps_spim0_ss_in_n                   => '1',                                                 
+            hps_spim0_ssi_oe_n                  => open,                                                  
+            hps_spim0_ss_0_n                    => HPS_spi_ss_n,                                                     
+            hps_spim0_ss_1_n                    => open,                                                     
+            hps_spim0_ss_2_n                    => open,                                                    
+            hps_spim0_ss_3_n                    => open,                                                     
+            hps_spim0_sclk_out_clk    				=> AD1939_spi_CCLK,
 				
 				-- -- HPS I2C #1 connection to TPA6130
-				-- hps_i2c0_out_data                   => i2c_serial_sda_oe,           
-            -- hps_i2c0_sda                        => i2c_0_i2c_serial_sda_in,       
-            -- hps_i2c0_clk_clk                    => serial_scl_oe,               
-		      -- hps_i2c0_scl_in_clk                 => i2c_serial_scl_in,       
+				hps_i2c0_out_data                   => i2c_serial_sda_oe,           
+            hps_i2c0_sda                        => i2c_0_i2c_serial_sda_in,       
+            hps_i2c0_clk_clk                    => serial_scl_oe,               
+		      hps_i2c0_scl_in_clk                 => i2c_serial_scl_in,       
 				
 				-- HPS Clock and Reset
             clk_clk                             => FPGA_CLK1_50,

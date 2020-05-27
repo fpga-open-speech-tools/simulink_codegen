@@ -75,8 +75,7 @@ def create_entity(name, sink_enabled, sink, source_enabled, source,
 
     # avalon memorymapped bus
     if registers_enabled:
-        num_of_registers = int(ceil(log(len(registers),2)) - 1)
-        num_of_registers =  num_of_registers if num_of_registers >= 0 else 0
+        num_of_registers = max(int(ceil(log(len(registers),2)) - 1), 0)
         entity += indent*2 + "avalon_slave_address".ljust(26, ' ') + ": in  std_logic_vector({} downto 0);\
             \n".format(str(num_of_registers).ljust(3, ' '))
 

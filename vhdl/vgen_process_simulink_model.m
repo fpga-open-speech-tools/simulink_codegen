@@ -85,8 +85,13 @@ disp('vgen: Creating .tcl script for Platform Designer.')
 infile = [avalon.entity '.json'];
 % NOTE: platform designer only adds components if they have the _hw.tcl suffix
 outfile = [hdlpath filesep avalon.entity '_avalon_hw.tcl'];
-vgenQuartus(infile, outfile, hdlpath)
+vgenHwTcl(infile, outfile, hdlpath)
+
 disp(['      created tcl file: ' outfile])
+
+disp('vgen: Executing Quartus workflow')
+vgenQuartus(infile, hdlpath)
+disp('Executed Quartus workflow')
 
 %% Generate the device driver code
 disp('Creating device driver.')
