@@ -133,7 +133,7 @@ def gen_qsys_file(tcl_file, working_dir):
         Working directory of the generation process
     """
     #TODO: Updates search path from being a hardcoded (relative) path 
-    cmd = f'cd {working_dir} & ' + QSYS_BIN_DIR + 'qsys-script ' + f'--script={tcl_file} ' + f'--search-path="../../../../../component_library/**/*,$" '
+    cmd = f'cd {working_dir} && ' + QSYS_BIN_DIR + 'qsys-script ' + f'--script={tcl_file} ' + f'--search-path="../../../../../component_library/**/*,$" '
     log_file_path = working_dir + "qsys_script.log"
     log_msg = "Generating qsys file from tcl file"
     run_cmd_and_log(cmd, log_msg, log_file_path)
@@ -149,7 +149,7 @@ def gen_qsys_system(qsys_file, working_dir):
     working_dir : string
         Working directory of the generation process
     """
-    cmd = f'cd {working_dir} & {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {qsys_file}'
+    cmd = f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {qsys_file}'
     log_file_path = working_dir + "qsys_gen.log"
     log_msg = "Generating system"
     run_cmd_and_log(cmd, log_msg, log_file_path)
@@ -199,7 +199,7 @@ def gen_pll_qsys(working_dir):
     pll_file = "pll.qsys"
     copyfile(RES_DIR + "/res/" + pll_file, working_dir + pll_file)
     log_msg = "Generating pll"
-    cmd =  f'cd {working_dir} & {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {pll_file}'
+    cmd =  f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {pll_file}'
     log_file_path = working_dir + "pll_gen.log"
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
@@ -214,7 +214,7 @@ def gen_project(working_dir):
         Working directory of the generation process
     """
     log_msg = "Generating and compiling project"
-    cmd = f"cd {working_dir} & {QUARTUS_BIN_DIR}quartus_sh -t make_project.tcl"
+    cmd = f"cd {working_dir} && {QUARTUS_BIN_DIR}quartus_sh -t make_project.tcl"
     log_file_path = working_dir + "project_gen.log"
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
@@ -232,7 +232,7 @@ def gen_rbf(working_dir, target_system):
     """
     log_msg = "Generating rbf file"
     # Command uses -m FPP for the fast passive parallel which ends up being equivalent to passive parallel x16
-    cmd = f"cd {working_dir}/output_files & {QUARTUS_BIN_DIR}quartus_cpf -c -m FPP {target_system}.sof {target_system}.rbf"
+    cmd = f"cd {working_dir}/output_files && {QUARTUS_BIN_DIR}quartus_cpf -c -m FPP {target_system}.sof {target_system}.rbf"
     log_file_path = working_dir + "rbf_gen.log"
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
