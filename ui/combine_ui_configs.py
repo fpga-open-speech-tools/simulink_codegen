@@ -23,7 +23,7 @@
 import json
 import argparse
 
-def main(configs, module_name, outfile='UI.json', verbose=False):
+def main(configs, name, outfile='UI.json', verbose=False):
     """
     Combine multiple UI json files into one.
 
@@ -34,11 +34,11 @@ def main(configs, module_name, outfile='UI.json', verbose=False):
 
     Inputs:
         configs     = list of linker json filenames
-        module_name = UI module name (what the UI represents), e.g. hearing aid 
+        name = UI name (what the UI represents), e.g. hearing aid 
         outfile     = name of the output linker json file
         verbose     = verbose printing
     """
-    combined = {'module': module_name, 'pages': []}
+    combined = {'name': name, 'pages': []}
     
     # lambda functions to get lists of page and panel names
     page_names = lambda: [combined['pages'][i]['name'] for i in range(len(combined['pages']))] 
@@ -89,7 +89,7 @@ def parseargs():
     """
     parser = argparse.ArgumentParser(description=\
         "Combine multiple UI json files into one")
-    parser.add_argument('module_name', 
+    parser.add_argument('name', 
         help="what the UI represents (e.g. hearing aid, multi-effects, etc.)")
     parser.add_argument('configs',
         help="list of UI files to combine", nargs='+')
@@ -98,9 +98,9 @@ def parseargs():
     parser.add_argument('-v', '--verbose', action='store_true', 
         help="verbose output")
     args = parser.parse_args()
-    return (args.configs, args.module_name, args.outfile, args.verbose)
+    return (args.configs, args.name, args.outfile, args.verbose)
 
 
 if __name__ == "__main__":
-    (configs, module_name, outfile, verbose) = parseargs()
-    main(configs, module_name, outfile, verbose)
+    (configs, name, outfile, verbose) = parseargs()
+    main(configs, name, outfile, verbose)
