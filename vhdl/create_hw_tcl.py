@@ -44,6 +44,7 @@ def create_module(input_struct):
     built_string += "set_module_property OPAQUE_ADDRESS_MAP " + \
         str(input_struct.opaque_address_map).lower() + "\n"
     built_string += "set_module_property AUTHOR \"" + input_struct.author + "\"\n"
+    built_string += "set_module_property GROUP \"FPGA Open Speech Tools/Autogen\"\n"
     built_string += "set_module_property DISPLAY_NAME \"" + \
         input_struct.display_name + "\"\n"
     built_string += "set_module_property INSTANTIATE_IN_SYSTEM_MODULE " + \

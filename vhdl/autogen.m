@@ -16,9 +16,6 @@ cmd = [bdroot,'([],[],[],''compile'');'];
         eval(cmd)
     catch
     end
-%while strcmp(get_param(bdroot,'SimulationStatus'), 'stopped') == 0
-    pause(1)
-    get_param(bdroot,'SimulationStatus')
 %end
 pe = pyenv;
 pause(5)

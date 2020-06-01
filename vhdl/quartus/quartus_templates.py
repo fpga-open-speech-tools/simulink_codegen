@@ -44,7 +44,10 @@ project_close
 """
 
 quartus_compile_template = """
+load_package flow
+
 project_open -revision project_revision project_name
+
 # compile the project
 execute_flow -compile
 
