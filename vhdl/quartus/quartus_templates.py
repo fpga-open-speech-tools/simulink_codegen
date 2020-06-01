@@ -25,7 +25,7 @@ created_by_function_header_template = """
 """
 
 quartus_project_template = """
-set project audio_effect
+set project project_name
 set target_system target_name
 load_package flow
 
@@ -39,8 +39,15 @@ files_list
 # Add post-compile hook
 set_global_assignment -name POST_FLOW_SCRIPT_FILE quartus_sh:gen_rbf.tcl
 
+
+project_close
+"""
+
+quartus_compile_template = """
+project_open -revision project_revision project_name
 # compile the project
 execute_flow -compile
+
 project_close
 """
 
@@ -94,9 +101,12 @@ class quartus_templates:
     def add_created_by_function_header(self, function):
         return created_by_function_header_template.replace("function", function.__name__)
 
-    def add_quartus_project(self, system_name, target):
+    def add_quartus_project(self, proj_name, target):
         files = self.add_files_list(target.files_list)
-        return quartus_project_template.replace("audio_effect", system_name).replace("target_name", target.name).replace("files_list", files)
+        return quartus_project_template.replace("project_name", proj_name).replace("target_name", target.name).replace("files_list", files)
+
+    def add_quartus_compile_project(self, project_name, project_revision):
+        return quartus_compile_template.replace("project_name", project_name).replace("project_revision", project_revision)
 
     def add_files_list(self, files):
         files_list = ''

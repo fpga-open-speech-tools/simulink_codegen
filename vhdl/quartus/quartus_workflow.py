@@ -54,7 +54,7 @@ def create_connections(target, config, template):
 
 
 def create_tcl_system_file(target, config, template, working_dir):
-    """Creates a tcl file that describes a qsys system
+    """Creates a tcl file that describes a qsys system based off a base qsys file
 
     Parameters
     ----------
@@ -67,23 +67,18 @@ def create_tcl_system_file(target, config, template, working_dir):
     working_dir : string
         Working directory of the generation process
     """
-
-    base_qsys_file = target.base_qsys_file
     tcl_file = target.system_name + ".tcl"
-    qsys_file = target.system_name + ".qsys"
-    ipx_file = "components.ipx"
-
+    
     print("Making tcl file for qsys")
-    copyfile(RES_DIR + base_qsys_file, working_dir + base_qsys_file)
-    copyfile(RES_DIR + ipx_file, working_dir + ipx_file)
+    copyfile(RES_DIR + target.base_qsys_file, working_dir + target.base_qsys_file)
 
     with open(working_dir + tcl_file, "w") as out_file:
         out_file.write(
             f"package require -exact qsys {config.quartus_version}\n")
-        out_file.write(f"load_system {{{base_qsys_file}}}")
+        out_file.write(f"load_system {{{target.base_qsys_file}}}")
         out_file.write(create_component_instantiation(config, template))
         out_file.write(create_connections(target, config, template))
-        out_file.write(f"save_system {{{qsys_file}}}")
+        out_file.write(f"save_system {{{target.system_name}}}")
 
 
 def run_cmd_and_log(cmd, log_msg, log_file_path, err_on_fail=True):
@@ -121,8 +116,20 @@ def run_cmd_and_log(cmd, log_msg, log_file_path, err_on_fail=True):
         raise ChildProcessError(
             f"The following command failed {cmd} \n The log file can be found at {log_file_path}")
 
+def gen_qsys_file(target, config, template, working_dir):
+    """Generates qsys file that represents a system in Platform Designer
 
-def gen_qsys_file(tcl_file, working_dir):
+    Parameters
+    ----------
+    tcl_file : string
+        Name of tcl file to convert into a qsys file
+    working_dir : string
+        Working directory of the generation process
+    """
+    create_tcl_system_file(target, config, template, working_dir)
+    gen_qsys_file_from_tcl(target.system_name + ".tcl", working_dir)
+
+def gen_qsys_file_from_tcl(tcl_file, working_dir):
     """Generates the qsys file from the tcl file using qsys-script
 
     Parameters
@@ -133,35 +140,61 @@ def gen_qsys_file(tcl_file, working_dir):
         Working directory of the generation process
     """
     #TODO: Updates search path from being a hardcoded (relative) path 
+    
+    ipx_file = "components.ipx"
+    copyfile(RES_DIR + ipx_file, working_dir + ipx_file)
+
     cmd = f'cd {working_dir} && ' + QSYS_BIN_DIR + 'qsys-script ' + f'--script={tcl_file} ' + f'--search-path="../../../../../component_library/**/*,$" '
     log_file_path = working_dir + "qsys_script.log"
     log_msg = "Generating qsys file from tcl file"
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
+def system_exists(system_name, working_dir):
+    return os.path.isfile(working_dir + system_name + ".qsys")
 
-def gen_qsys_system(qsys_file, working_dir):
+def gen_qsys_system(target, config, template, working_dir):
+    """Generates the Platform Designer system as described by target in the working directory
+
+    Parameters
+    ----------
+    target : Target
+        NamedTuple that provides information about the target configuration
+    config : InputStructure
+        User input structure describing the intended generation
+    template : quartus_templates
+        template object to utilize qsys templates  
+    working_dir : string
+        Working directory of the generation process
+    """
+    if not(system_exists(target.system_name, working_dir)):
+        gen_qsys_file(target, config, template, working_dir)
+    gen_qsys_system_from_qsys_file(target.system_name, working_dir)
+
+def gen_qsys_system_from_qsys_file(system_name, working_dir):
     """Generates the qsys file using qsys-generate
 
     Parameters
     ----------
-    qsys_file : string
-        Qsys file to generate
+    system_name : string
+        Name of the system to generate
     working_dir : string
         Working directory of the generation process
     """
-    cmd = f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {qsys_file}'
+    cmd = f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {system_name}.qsys'
     log_file_path = working_dir + "qsys_gen.log"
     log_msg = "Generating system"
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
 
-def gen_project_tcl(target, template, working_dir):
+def gen_project_tcl(project_name, target, template, working_dir):
     """Generates the make_project.tcl file
     Also copies over the top level VHDL file and
     base project tcl file into the working directory
 
     Parameters
     ----------
+    project_name : str
+        Name of the project
     target : Target
         NamedTuple that provides information about the target configuration
     template : quartus_templates
@@ -177,7 +210,7 @@ def gen_project_tcl(target, template, working_dir):
     print("Generating make_project.tcl")
     with open(working_dir + "make_project.tcl", "w") as proj_file:
         proj_file.write(template.add_quartus_project(
-            target.system_name, target))
+            project_name, target))
     copyfile(RES_DIR + base_project_file, working_dir + base_project_file)
 
     with open(RES_DIR + top_level_vhdl_file, "r") as orig_top_file:
@@ -204,8 +237,18 @@ def gen_pll_qsys(working_dir):
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
+def project_with_revision_exists(project_name, project_revision, working_dir):
+    try:
+        with open(working_dir + project_name, "r") as project_file:
+            for line in project_file:
+                if f"PROJECT_REVISION = \"{project_revision}\"" in line:
+                    return True
+            return False
+    except FileNotFoundError:
+        return False
 
-def gen_project(working_dir):
+
+def gen_project(project_name, target, template, working_dir):
     """Generates and compiles the project defined in make_project.tcl
 
     Parameters
@@ -213,12 +256,28 @@ def gen_project(working_dir):
     working_dir : string
         Working directory of the generation process
     """
-    log_msg = "Generating and compiling project"
+    gen_project_tcl(project_name, target, template, working_dir)
+    if(target.name == "arria10"):
+        gen_pll_qsys(working_dir)
+
+    log_msg = "Generating project"
     cmd = f"cd {working_dir} && {QUARTUS_BIN_DIR}quartus_sh -t make_project.tcl"
     log_file_path = working_dir + "project_gen.log"
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
+def compile_project(project_name, project_revision, template, working_dir):
+    tcl_file = "compile_project.tcl"
+    if not(os.path.isfile(working_dir + tcl_file)):
+        with open(working_dir + tcl_file, "w") as compile_file:
+            compile_file.write(template.add_quartus_compile_project(
+                project_name, project_revision))
+
+    log_msg = "Compiling project"
+    cmd = f"cd {working_dir} && {QUARTUS_BIN_DIR}quartus_sh -t {tcl_file}"
+    log_file_path = working_dir + "compile_project.log"
+
+    run_cmd_and_log(cmd, log_msg, log_file_path)
 
 def gen_rbf(working_dir, target_system):
     """Converts the sof file to an rbf file
@@ -276,13 +335,11 @@ def execute_quartus_workflow(config, working_dir=""):
         len(config.custom_components), int(target.base_address))
     os.makedirs(working_dir, exist_ok=True)
 
-    create_tcl_system_file(target, config, template, working_dir)
+    gen_qsys_system(target, config, template, working_dir)
 
-    gen_qsys_file(tcl_file, working_dir)
-    gen_qsys_system(qsys_file, working_dir)
-    gen_project_tcl(target, template, working_dir)
-
-    if(config.target_system == "arria10"):
-        gen_pll_qsys(working_dir)
-
-    gen_project(working_dir)
+    project_name = "_".join(config.custom_components)
+    if not(project_with_revision_exists(project_name, project_revision=target.name, working_dir=working_dir)):
+        gen_project(project_name, target, template, working_dir)
+        compile_project(project_name, project_revision=target.name, template=template, working_dir=working_dir)
+    else:
+        compile_project(project_name, project_revision=target.name, template=template, working_dir=working_dir)

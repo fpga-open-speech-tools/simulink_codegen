@@ -85,6 +85,7 @@ disp('vgen: Creating .tcl script for Platform Designer.')
 infile = [avalon.entity '.json'];
 % NOTE: platform designer only adds components if they have the _hw.tcl suffix
 outfile = [hdlpath filesep avalon.entity '_avalon_hw.tcl'];
+disp(['file ' infile ' out ' outfile ' path ' hdlpath])
 vgenHwTcl(infile, outfile, hdlpath)
 
 disp(['      created tcl file: ' outfile])
