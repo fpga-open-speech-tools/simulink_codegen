@@ -13,10 +13,11 @@ DE10 = Target(name='de10', system_name='de10_system', device_family='Cyclone V',
               audio_in='FE_Qsys_AD1939_Audio_Mini_v1_0.Line_In', audio_out='FE_Qsys_AD1939_Audio_Mini_v1_0.Headphone_Out',
               clock_name='clk_hps'
               )
-Arria10 = Target(name='arria10', system_name='arria10_system', device_family='Arria 10',
-                 device='10AS066H2F34I1HG', base_qsys_file='som_system.qsys', base_proj_tcl_file='arria10_proj.tcl',
+              
+Audioblade = Target(name='audioblade', system_name='audioblade_system', device_family='Arria 10',
+                 device='10AS066H2F34I1HG', base_qsys_file='som_system.qsys', base_proj_tcl_file='audioblade_proj.tcl',
                  files_list=['A10SoM_System.vhd',
-                             'arria10_system/arria10_system.qip', 'pll.qsys'],
+                             'audioblade_system/audioblade_system.qip', 'pll.qsys'],
                  top_level_vhdl_file='A10SoM_System.vhd', original_system='som_system', base_address='20',
                  axi_master_name='arria10_hps_0.h2f_lw_axi_master', audio_in='FE_Qsys_AD1939_Audio_Research_v1_0.Line_In',
                  audio_out='FE_Qsys_AD1939_Audio_Research_v1_0.Headphone_Out', clock_name='clk_1'

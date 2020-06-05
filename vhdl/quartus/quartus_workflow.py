@@ -3,7 +3,7 @@ import subprocess
 import fileinput
 from shutil import copyfile
 from quartus.quartus_templates import quartus_templates
-from quartus.target import DE10, Arria10, Target
+from quartus.target import DE10, Audioblade, Target
 
 
 def create_component_instantiation(config, template):
@@ -75,7 +75,8 @@ def create_tcl_system_file(target, config, template, working_dir):
     with open(working_dir + tcl_file, "w") as out_file:
         out_file.write(
             f"package require -exact qsys {config.quartus_version}\n")
-        out_file.write(f"load_system {{{target.base_qsys_file}}}")
+        out_file.write(f"load_system {{{target.base_qsys_file}}}\n")
+        out_file.write(f"set_instance_parameter_value pll_using_AD1939_MCLK {{gui_output_clock_frequency0}} {{{config.clock_rate/1_000_000}}}")
         out_file.write(create_component_instantiation(config, template))
         out_file.write(create_connections(target, config, template))
         out_file.write(f"save_system {{{target.system_name}}}")
@@ -140,9 +141,6 @@ def gen_qsys_file_from_tcl(tcl_file, working_dir):
         Working directory of the generation process
     """
     #TODO: Updates search path from being a hardcoded (relative) path 
-    
-    ipx_file = "components.ipx"
-    copyfile(RES_DIR + ipx_file, working_dir + ipx_file)
 
     cmd = f'cd {working_dir} && ' + QSYS_BIN_DIR + 'qsys-script ' + f'--script={tcl_file} ' + f'--search-path="../../../../../component_library/**/*,$" '
     log_file_path = working_dir + "qsys_script.log"
@@ -166,6 +164,9 @@ def gen_qsys_system(target, config, template, working_dir):
     working_dir : string
         Working directory of the generation process
     """
+    ipx_file = "components.ipx"
+    copyfile(RES_DIR + ipx_file, working_dir + ipx_file)
+    
     if not(system_exists(target.system_name, working_dir)):
         gen_qsys_file(target, config, template, working_dir)
     gen_qsys_system_from_qsys_file(target.system_name, working_dir)
@@ -312,8 +313,8 @@ def execute_quartus_workflow(config, working_dir=""):
 
     if(config.target_system == "de10"):
         target = DE10
-    elif(config.target_system == "arria10"):
-        target = Arria10
+    elif(config.target_system == "audioblade"):
+        target = Audioblade
     else:
         raise ValueError(
             f"The provided target: {config.target_system} is not supported")

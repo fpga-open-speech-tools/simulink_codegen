@@ -91,7 +91,7 @@ vgenHwTcl(infile, outfile, hdlpath)
 disp(['      created tcl file: ' outfile])
 
 disp('vgen: Executing Quartus workflow')
-vgenQuartus(infile, hdlpath)
+vgenQuartus(infile, hdlpath + "/quartus/")
 disp('Executed Quartus workflow')
 
 %% Generate the device driver code
@@ -129,6 +129,23 @@ end
 % TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
 %       This file shouldn't live in the vhdl folder anymore.
 
+try
+    py.generate.generate_device_tree_overlay(hdlpath + "/quartus/" + mp.target_system + '_system.sopcinfo', mp.target_system + '.rbf')
+catch e
+    disp(getReport(e))
+end
+
+if ispc
+    if system('wsl.exe cd') == 0 
+        system("wsl.exe dtc -@ -O dtb -o " + mp.target_system + ".dtbo " + mp.target_system + ".dts");
+    else
+        disp("Windows Subsystem for Linux is currently required to automate compiling device tree overlays")
+    end
+elseif isunix
+    system("dtc -@ -O dtb -o " + mp.target_system + ".dtbo " + mp.target_system + ".dts");
+else
+    disp('The current operating system is unsupported for automatically compiling device tree overlays')
+end
 
 disp('vgen: Finished.')
 

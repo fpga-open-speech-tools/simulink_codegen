@@ -56,11 +56,6 @@ project_close
 
 
 class quartus_templates:
-    custom_component_header = (
-        "# # # # # # # # # # # # # # # # # # # # # #\n"
-        "# Custom Components \n"
-        "# # # # # # # # # # # # # # # # # # # # # #\n\n"
-    )
 
     def __init__(self, num_custom_components, baseAddress):
         self.custom_components_added = 0
@@ -84,7 +79,6 @@ class quartus_templates:
             .replace("clock_name", target.clock_name)
 
         if(self.custom_components_added == 0):
-            built_string += self.custom_component_header
             built_string += custom_component_initial_audio_in_connection_template.replace(
                 "component_name", component_name).replace("audio_in", target.audio_in)
         if((self.custom_components_added + 1) == self.num_custom_components):
