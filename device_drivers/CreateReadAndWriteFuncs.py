@@ -75,9 +75,9 @@ def CreateFPGAAttrReadWrite(inputParams):
             # TODO: add support for int, bool, etc.
             # TODO: fix parsing of fractional bits; this code currently doesn't return the correct part of the string. we should maybe do the parsing elsewhere and have a field in inputParams for fractional bits
             functionString += "  fp_to_string(buf, devp->" + inputParams.deviceAttributes[i] + \
-                ", " + str(inputParams.attributeDataTypeWidth[i]) + ", " + \
+                ", " + str(inputParams.attributeDataTypeFraction[i]) + ", " + \
                 str(inputParams.attributeDataTypeSigned[i]).lower()+ ", " + \
-                str(inputParams.attributeDataTypeFraction[i]) + ");\n"
+                str(inputParams.attributeDataTypeWidth[i]) + ");\n"
             functionString += "  strcat2(buf,\"\\n\");\n"
             functionString += "  return strlen(buf);\n"
         else:
@@ -189,7 +189,7 @@ def CreateFPGAWriteFunc(inputParams, i):
     functionString += "  substring[substring_count] = 0;\n"
     is_signed = inputParams.attributeDataTypeSigned[i]
     functionString += "  tempValue = set_fixed_num(substring, " + \
-        str(inputParams.attributeDataTypeWidth[i]) + ", " + (str(is_signed)).lower() + ");\n"
+        str(inputParams.attributeDataTypeFraction[i]) + ", " + (str(is_signed)).lower() + ");\n"
     functionString += "  devp->" + inputParams.deviceAttributes[i] + " = tempValue;\n"
     functionString += "  iowrite32(devp->" + inputParams.deviceAttributes[i] + ", (u32 *)devp->regs"
     for j in range(len(inputParams.attributeWriteOffsets[i])):
