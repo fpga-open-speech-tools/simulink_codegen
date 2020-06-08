@@ -326,8 +326,8 @@ def execute_quartus_workflow(config, working_dir=""):
     global QUARTUS_BIN_DIR
     global QSYS_BIN_DIR
     QUARTUS_BIN_DIR = os.environ["QSYS_ROOTDIR"].split("sopc_builder")[
-        0] + "bin64\\"
-    QSYS_BIN_DIR = os.environ["QSYS_ROOTDIR"] + "\\"
+        0] + "bin64/"
+    QSYS_BIN_DIR = os.environ["QSYS_ROOTDIR"] + "/"
 
     tcl_file = target.system_name + ".tcl"
     qsys_file = target.system_name + ".qsys"
