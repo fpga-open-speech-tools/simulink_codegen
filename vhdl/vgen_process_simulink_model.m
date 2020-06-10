@@ -65,6 +65,13 @@ avalon.target_system        = mp.target_system;
 writejson(avalon, [avalon.entity,'.json'])
 save([avalon.entity '_avalon'], 'avalon')
 
+%% Create UI config files
+disp('Creating linker json file.')
+mp = createLinkerWidgetNames(mp);
+genLinkerConfig(mp, ['Linker_', mp.model_name, '.json']);
+disp('Creating UI config json file.')
+genUiConfig(mp, ['UI_', mp.model_name, '.json']);
+
 %% Generate the Simulink model VHDL code
 
 % run the hdl coder
@@ -126,6 +133,7 @@ elseif isunix
 else
     disp('The current operating system is unsupported for automatically building kernel modules')
 end
+
 % TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
 %       This file shouldn't live in the vhdl folder anymore.
 
@@ -148,6 +156,8 @@ else
 end
 
 disp('vgen: Finished.')
+
+cd(mp.model_path)
 
 % reset fast simulation flag so running the model simulation isn't so slow after generating code. 
 mp.fastsim_flag = 1;
