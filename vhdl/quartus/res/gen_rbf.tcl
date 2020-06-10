@@ -2,7 +2,7 @@ set OS [lindex $tcl_platform(os) 0]
 if { $OS == "Windows" } {
     set bin_dir "bin64\\"
 } else {
-    set bin_dir "bin\\"
+    set bin_dir "bin/"
 }
 set sof_files [glob output_files/*.sof]
 

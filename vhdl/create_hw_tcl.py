@@ -6,7 +6,7 @@ from populate_additional_filesets import populate_additional_filesets
 
 def main(inputFilename, outputFilename, additionalFilesetAbsDir):
     input_struct = parse_json(
-        additionalFilesetAbsDir + "\\..\\..\\" + inputFilename)
+        additionalFilesetAbsDir + "/../../" + inputFilename)
     populate_additional_filesets(input_struct, additionalFilesetAbsDir)
     write_tcl(input_struct, outputFilename)
 

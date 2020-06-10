@@ -1,6 +1,7 @@
 import os
 import subprocess
 import fileinput
+import sys
 from shutil import copyfile
 from quartus.quartus_templates import quartus_templates
 from quartus.target import DE10, Audioblade, Target
@@ -325,8 +326,16 @@ def execute_quartus_workflow(config, working_dir=""):
     RES_DIR = os.path.dirname(abspath) + "/res/"
     global QUARTUS_BIN_DIR
     global QSYS_BIN_DIR
-    QUARTUS_BIN_DIR = os.environ["QSYS_ROOTDIR"].split("sopc_builder")[
-        0] + "bin64/"
+
+    if sys.platform == 'win32':
+        QUARTUS_BIN_DIR = os.environ["QSYS_ROOTDIR"].split("sopc_builder")[0] + "bin64/"
+    elif sys.platform == 'linux':
+        QUARTUS_BIN_DIR = os.environ["QSYS_ROOTDIR"].split("sopc_builder")[0] + "bin/"
+    else:
+        # NOTE: not sure what the most correct exception to raise here is
+        raise Exception("You are running on an unsupported OS")
+
+
     QSYS_BIN_DIR = os.environ["QSYS_ROOTDIR"] + "/"
 
     tcl_file = target.system_name + ".tcl"
