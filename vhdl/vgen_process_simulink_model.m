@@ -58,6 +58,8 @@ avalon.model_name           = mp.model_name;
 avalon.model_abbreviation   = mp.model_abbreviation;
 avalon.linux_device_name    = mp.linux_device_name;
 avalon.linux_device_version = mp.linux_device_version;
+avalon.quartus_path         = mp.quartus_path;
+avalon.target_system        = mp.target_system;
 
 %% Save the avalon structure to a json file and a .mat file
 writejson(avalon, [avalon.entity,'.json'])
@@ -90,8 +92,14 @@ disp('vgen: Creating .tcl script for Platform Designer.')
 infile = [avalon.entity '.json'];
 % NOTE: platform designer only adds components if they have the _hw.tcl suffix
 outfile = [hdlpath filesep avalon.entity '_avalon_hw.tcl'];
-vgenTcl(infile, outfile, hdlpath);
+disp(['file ' infile ' out ' outfile ' path ' hdlpath])
+vgenHwTcl(infile, outfile, hdlpath)
+
 disp(['      created tcl file: ' outfile])
+
+disp('vgen: Executing Quartus workflow')
+vgenQuartus(infile, hdlpath + "/quartus/")
+disp('Executed Quartus workflow')
 
 %% Generate the device driver code
 disp('Creating device driver.')
@@ -110,18 +118,42 @@ disp(['      created Kbuild: ' [hdlpath filesep 'Kbuild']])
 %       use a virtual machine to compile the device driver, but that
 %       won't automate very well. Maybe we can build the kernel module 
 %       with Quartus' embedded command shell instead?
-if isunix
-    disp('Building kernel module.')
-    cd(hdlpath)
+disp('Building kernel module.')
+cd(hdlpath)
+if ispc
+    if system('wsl.exe cd') == 0 
+        !wsl.exe make clean
+        !wsl.exe make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+    else
+        disp("Windows Subsystem for Linux is currently required to automate building kernel modules")
+    end
+elseif isunix
     !make clean
-    !make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- 
+    !make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
 else
-    disp('Kernel module needs to be manually built in a Linux environment.')
+    disp('The current operating system is unsupported for automatically building kernel modules')
 end
 
 % TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
 %       This file shouldn't live in the vhdl folder anymore.
 
+try
+    py.generate.generate_device_tree_overlay(hdlpath + "/quartus/" + mp.target_system + '_system.sopcinfo', mp.target_system + '.rbf')
+catch e
+    disp(getReport(e))
+end
+
+if ispc
+    if system('wsl.exe cd') == 0 
+        system("wsl.exe dtc -@ -O dtb -o " + mp.target_system + ".dtbo " + mp.target_system + ".dts");
+    else
+        disp("Windows Subsystem for Linux is currently required to automate compiling device tree overlays")
+    end
+elseif isunix
+    system("dtc -@ -O dtb -o " + mp.target_system + ".dtbo " + mp.target_system + ".dts");
+else
+    disp('The current operating system is unsupported for automatically compiling device tree overlays')
+end
 
 disp('vgen: Finished.')
 

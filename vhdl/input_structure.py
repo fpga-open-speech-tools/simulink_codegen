@@ -14,7 +14,10 @@ class InputStructure:
         self.allow_greybox_generation = False
         self.report_hierarchy = False
         self.additional_module_properties = []
+        self.custom_components = []
 
+        self.quartus_path = ""
+        self.quartus_version = ""
         self.quartus_synth_top_level = "Fill me in"
         self.enable_rel_inc_paths = False
         self.enable_file_overwrite = False
@@ -26,6 +29,7 @@ class InputStructure:
         self.compatible_flag = "Fill me in"
         self.group = "Fill me in"
         self.vendor = "fe"
+        self.target_system = ""
 
         self.clock_rate = 0
         self.clock_abbrev = "clk"
