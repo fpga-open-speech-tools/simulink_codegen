@@ -29,7 +29,7 @@ set project project_name
 set target_system target_name
 load_package flow
 
-project_new $project -revision $target_system -overwrite
+project_new $project -revision ${project}_$target_system -overwrite
 
 source ${target_system}_proj.tcl
 

@@ -17,7 +17,6 @@ cmd = [bdroot,'([],[],[],''compile'');'];
     catch
     end
 %end
-pe = pyenv;
 pause(5)
 get_param(bdroot,'SimulationStatus')
 vgen_process_simulink_model
