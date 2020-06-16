@@ -98,7 +98,7 @@ vgenHwTcl(infile, outfile, hdlpath)
 disp(['      created tcl file: ' outfile])
 
 disp('vgen: Executing Quartus workflow')
-%vgenQuartus(infile, hdlpath + "/quartus/")
+vgenQuartus(infile, hdlpath + "/quartus/")
 disp('Executed Quartus workflow')
 
 %% Generate the device driver code
