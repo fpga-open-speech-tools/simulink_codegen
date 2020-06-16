@@ -348,8 +348,9 @@ def execute_quartus_workflow(config, working_dir=""):
     gen_qsys_system(target, config, template, working_dir)
 
     project_name = "_".join(config.custom_components)
-    if not(project_with_revision_exists(project_name, project_revision=target.name, working_dir=working_dir)):
+    project_revision = project_name + "_" + target.name
+    if not(project_with_revision_exists(project_name, project_revision=project_revision, working_dir=working_dir)):
         gen_project(project_name, target, template, working_dir)
-        compile_project(project_name, project_revision=target.name, template=template, working_dir=working_dir)
+        compile_project(project_name, project_revision=project_revision, template=template, working_dir=working_dir)
     else:
-        compile_project(project_name, project_revision=target.name, template=template, working_dir=working_dir)
+        compile_project(project_name, project_revision=project_revision, template=template, working_dir=working_dir)

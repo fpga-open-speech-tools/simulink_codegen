@@ -105,7 +105,7 @@ if (isempty(register_names)==0) % The avalon memory mapped interface exists
             avalon1.avalon_memorymapped.register{index}.reg_num   = index - 1;
             Nregisters = length(model_params.register);
             for j=1:Nregisters
-                 if strcmpi(register_name,model_params.register(j).name)  % get the register with the same name
+                if strcmpi(register_name,model_params.register(j).name)  % get the register with the same name
                     avalon1.avalon_memorymapped.register{index}.default_value = model_params.register(j).default;
                     avalon1.avalon_memorymapped.register{index}.min_value     = model_params.register(j).min;
                     avalon1.avalon_memorymapped.register{index}.max_value     = model_params.register(j).max;
