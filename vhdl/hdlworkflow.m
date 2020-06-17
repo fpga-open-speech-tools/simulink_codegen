@@ -3,10 +3,10 @@ model = mp.model_abbreviation;
 dataplane_name = 'dataplane';
 load_system(model);
 
-if mp.target_system == 'de10'
+if strcmp(mp.target_system,'de10')
     device_family = 'Cyclone V';
     device = '5CSEBA6U23I7';
-elseif mp.target_system == 'arria10'
+elseif strcmp(mp.target_system,'arria10')
     device_family = 'Arria 10';
     device = '10AS066H2F34I1HG';
 end
