@@ -138,14 +138,14 @@ def create_architecture(name, registers_enabled, registers, register_defaults,
 
 
     architecture += "\n"
-    architecture += create_component_declaration2(clock=clock, entity=name, sink_flag=sink_flag, sink_signal=sink_signal,
+    architecture += create_component_declaration(clock=clock, entity=name, sink_flag=sink_flag, sink_signal=sink_signal,
                             mm_flag=mm_flag, mm_signal=mm_signal, ci_flag=ci_flag, ci_signal=ci_signal,
                             source_flag=source_flag, source_signal=source_signal, co_flag=co_flag, co_signal=co_signal)
 
     # begin architecture
     architecture += "\nbegin\n\n"
 
-    architecture += create_component_instantiation2(ts_system=clock, entity=name, sink_flag=sink_flag, sink_signal=sink_signal,
+    architecture += create_component_instantiation(ts_system=clock, entity=name, sink_flag=sink_flag, sink_signal=sink_signal,
                             mm_flag=mm_flag, mm_signal=mm_signal, ci_flag=ci_flag, ci_signal=ci_signal,
                             source_flag=source_flag, source_signal=source_signal, co_flag=co_flag, co_signal=co_signal)
 
@@ -246,7 +246,7 @@ def num_to_bitstring(value, tot_bits, frac_bits):
     return bitstring
 
 
-def create_component_declaration2(clock, entity, sink_flag, sink_signal, mm_flag, mm_signal, ci_flag, ci_signal, source_flag, source_signal, co_flag, co_signal):
+def create_component_declaration(clock, entity, sink_flag, sink_signal, mm_flag, mm_signal, ci_flag, ci_signal, source_flag, source_signal, co_flag, co_signal):
     global indent
     decl = "component " + entity + "\n"
     decl += indent * 1 + "port(\n"
@@ -286,7 +286,7 @@ def create_component_declaration2(clock, entity, sink_flag, sink_signal, mm_flag
     decl += "end component;\n"
     return decl
 
-def create_component_instantiation2(ts_system, entity, sink_flag, sink_signal, mm_flag, mm_signal, ci_flag, ci_signal, source_flag, source_signal, co_flag, co_signal):
+def create_component_instantiation(ts_system, entity, sink_flag, sink_signal, mm_flag, mm_signal, ci_flag, ci_signal, source_flag, source_signal, co_flag, co_signal):
     global indent
     inst = "u_" + entity + " : " + entity + "\n"
     inst += indent * 1 + "port map(\n"
