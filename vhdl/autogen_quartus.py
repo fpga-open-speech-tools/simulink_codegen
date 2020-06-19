@@ -1,16 +1,15 @@
 import argparse
 
-from input_structure import InputStructure
-from parse_json import parse_json
+from dataplane_config import DataplaneConfig
 from quartus.quartus_workflow import execute_quartus_workflow
 
 
 def main(inputFilename, working_dir):
     if not(working_dir.endswith("/")):
         working_dir += "/"
-    input_struct = parse_json(inputFilename)
+    dataplane_config = DataplaneConfig.parse_json(inputFilename)
     execute_quartus_workflow(
-        input_struct, working_dir)
+        dataplane_config, working_dir)
 
 def parseargs():
     """

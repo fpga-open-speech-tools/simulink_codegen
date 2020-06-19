@@ -334,7 +334,7 @@ def create_component_reg_defaults(mm_flag, mm_signal):
     if mm_flag == 1:
         for i in range(len(mm_signal)):
             name = mm_signal[i]["name"]
-            name2 = name.replace("Register_Control_", "")
+            name2 = name.lower().replace("register_control_", "")
             def_val = mm_signal[i]["default_value"]
             datatype = mm_signal[i]["data_type"]
             typestr = datatype['type']

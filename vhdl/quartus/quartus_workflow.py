@@ -2,12 +2,13 @@ import os
 import subprocess
 import fileinput
 import sys
+import re
 from shutil import copyfile
 from quartus.quartus_templates import quartus_templates
-from quartus.target import DE10, Audioblade, Target
+from quartus.target import Audiomini, Audioblade, Target
 
 
-def create_component_instantiation(config, template):
+def create_component_instantiation(custom_components, template):
     """Creates the tcl string to handle component instantiation for a qsys system
 
     Parameters
@@ -24,13 +25,13 @@ def create_component_instantiation(config, template):
     """
     built_string = template.add_created_by_function_header(
         create_component_instantiation)
-    for custom_component in config.custom_components:
+    for custom_component in custom_components:
         built_string += template.add_custom_component_instantiaion(
             custom_component)
     return built_string
 
 
-def create_connections(target, config, template):
+def create_connections(target, custom_components, template):
     """Creates the tcl string to handle connections for a qsys system
 
     Parameters
@@ -48,13 +49,13 @@ def create_connections(target, config, template):
         Connections section of tcl file
     """
     built_string = template.add_created_by_function_header(create_connections)
-    for custom_component in config.custom_components:
+    for custom_component in custom_components:
         built_string += template.add_custom_component_connections(
             custom_component, target)
     return built_string
 
 
-def create_tcl_system_file(target, config, template, working_dir):
+def create_tcl_system_file(target, custom_components, sys_clock_rate_hz, template, working_dir):
     """Creates a tcl file that describes a qsys system based off a base qsys file
 
     Parameters
@@ -73,13 +74,15 @@ def create_tcl_system_file(target, config, template, working_dir):
     print("Making tcl file for qsys")
     copyfile(RES_DIR + target.base_qsys_file, working_dir + target.base_qsys_file)
 
+    quartus_version = re.search(r'.intelFPGA.(\d+\.\d+)', QUARTUS_BIN_DIR).group(1)
+
     with open(working_dir + tcl_file, "w") as out_file:
         out_file.write(
-            f"package require -exact qsys {config.quartus_version}\n")
+            f"package require -exact qsys {quartus_version}\n")
         out_file.write(f"load_system {{{target.base_qsys_file}}}\n")
-        out_file.write(f"set_instance_parameter_value pll_using_AD1939_MCLK {{gui_output_clock_frequency0}} {{{config.clock_rate/1_000_000}}}")
-        out_file.write(create_component_instantiation(config, template))
-        out_file.write(create_connections(target, config, template))
+        out_file.write(f"set_instance_parameter_value pll_using_AD1939_MCLK {{gui_output_clock_frequency0}} {{{sys_clock_rate_hz/1_000_000}}}")
+        out_file.write(create_component_instantiation(custom_components, template))
+        out_file.write(create_connections(target, custom_components, template))
         out_file.write(f"save_system {{{target.system_name}}}")
 
 
@@ -118,7 +121,7 @@ def run_cmd_and_log(cmd, log_msg, log_file_path, err_on_fail=True):
         raise ChildProcessError(
             f"The following command failed {cmd} \n The log file can be found at {log_file_path}")
 
-def gen_qsys_file(target, config, template, working_dir):
+def gen_qsys_file(target, custom_components, sys_clock_rate_hz, template, working_dir):
     """Generates qsys file that represents a system in Platform Designer
 
     Parameters
@@ -128,7 +131,7 @@ def gen_qsys_file(target, config, template, working_dir):
     working_dir : string
         Working directory of the generation process
     """
-    create_tcl_system_file(target, config, template, working_dir)
+    create_tcl_system_file(target, custom_components, sys_clock_rate_hz, template, working_dir)
     gen_qsys_file_from_tcl(target.system_name + ".tcl", working_dir)
 
 def gen_qsys_file_from_tcl(tcl_file, working_dir):
@@ -151,7 +154,7 @@ def gen_qsys_file_from_tcl(tcl_file, working_dir):
 def system_exists(system_name, working_dir):
     return os.path.isfile(working_dir + system_name + ".qsys")
 
-def gen_qsys_system(target, config, template, working_dir):
+def gen_qsys_system(target, custom_components, sys_clock_rate_hz, template, working_dir):
     """Generates the Platform Designer system as described by target in the working directory
 
     Parameters
@@ -169,7 +172,7 @@ def gen_qsys_system(target, config, template, working_dir):
     copyfile(RES_DIR + ipx_file, working_dir + ipx_file)
     
     if not(system_exists(target.system_name, working_dir)):
-        gen_qsys_file(target, config, template, working_dir)
+        gen_qsys_file(target, custom_components, sys_clock_rate_hz, template, working_dir)
     gen_qsys_system_from_qsys_file(target.system_name, working_dir)
 
 def gen_qsys_system_from_qsys_file(system_name, working_dir):
@@ -299,7 +302,7 @@ def gen_rbf(working_dir, target_system):
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
 
-def execute_quartus_workflow(config, working_dir=""):
+def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz, working_dir=""):
     """Executes quartus workflow that creates a system and project, compiles it,
         and converts the output file to an RBF
 
@@ -312,13 +315,13 @@ def execute_quartus_workflow(config, working_dir=""):
     """
     target = None
 
-    if(config.target_system == "de10"):
-        target = DE10
-    elif(config.target_system == "audioblade"):
+    if(target_system == "audiomini"):
+        target = Audiomini
+    elif(target_system == "audioblade"):
         target = Audioblade
     else:
         raise ValueError(
-            f"The provided target: {config.target_system} is not supported")
+            f"The provided target: {target_system} is not supported")
 
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
@@ -342,12 +345,12 @@ def execute_quartus_workflow(config, working_dir=""):
     qsys_file = target.system_name + ".qsys"
 
     template = quartus_templates(
-        len(config.custom_components), int(target.base_address))
+        len(custom_components), int(target.base_address))
     os.makedirs(working_dir, exist_ok=True)
 
-    gen_qsys_system(target, config, template, working_dir)
+    gen_qsys_system(target, custom_components, sys_clock_rate_hz, template, working_dir)
 
-    project_name = "_".join(config.custom_components)
+    project_name = "_".join(custom_components)
     project_revision = project_name + "_" + target.name
     if not(project_with_revision_exists(project_name, project_revision=project_revision, working_dir=working_dir)):
         gen_project(project_name, target, template, working_dir)
