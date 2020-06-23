@@ -373,15 +373,15 @@ def convert_default_value(value, datatype):
 def parseargs():
     parser = argparse.ArgumentParser(description=\
         "Generate VHDL code for Avalon streaming and memory-mapped interfaces.")
-    parser.add_argument('infile',
+    parser.add_argument('-c','--config_file',
         help="json file containing the interface and register specifications")
     parser.add_argument('-v', '--verbose', action='store_true',
         help="verbose output")
     parser.add_argument('-p', '--print', action='store_true', dest='print_output',
         help="print out the generated vhdl code")
-    parser.add_argument('outfile', help="the name of the output vhdl file")
+    parser.add_argument('-o', '--outfile', help="the name of the output vhdl file")
     args = parser.parse_args()
-    return (args.infile, args.outfile, args.verbose, args.print_output)
+    return (args.config_file, args.outfile, args.verbose, args.print_output)
 
 
 # TODO: make a default filename?

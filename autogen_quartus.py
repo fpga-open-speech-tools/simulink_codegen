@@ -2,7 +2,7 @@ import argparse
 import sys
 import logging
 
-from dataplane_config import DataplaneConfig
+from quartus.workflow_config import WorkflowConfig
 from quartus.quartus_workflow import execute_quartus_workflow
 
 
@@ -11,9 +11,9 @@ def main(inputFilename, working_dir, log_to_file=False):
         working_dir += "/"
     logger = init_logging(logging.INFO, log_to_file)
     try:
-        dataplane_config = DataplaneConfig.parse_json(inputFilename)
+        config = WorkflowConfig.parse_json(inputFilename)
         execute_quartus_workflow(
-            dataplane_config.target_system, dataplane_config.custom_components, dataplane_config.clock_rate, working_dir)
+            config.target_system, config.custom_components, config.clock_rate, working_dir)
     finally:
         logger.info("exit")
 

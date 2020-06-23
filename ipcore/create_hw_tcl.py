@@ -266,14 +266,14 @@ def parseargs():
     """
     parser = argparse.ArgumentParser(
         description="Generates a Platform Design/Qsys component as _hw.tcl file")
-    parser.add_argument('-j', '--json',
+    parser.add_argument('-c', '--config',
                         help="JSON file containing autogen configuration")
     parser.add_argument('-w', '--working-dir',
-                        help="Working directory to generate the Platform Design/Qsys component in")
+                        help="Working directory to generate the Platform Designer component in")
     parser.add_argument('-o', '--output-filename',
                         help="Name of the output file, recommended to end in '_hw.tcl'")
     args = parser.parse_args()
-    return (args.json, args.output_filename, args.working_dir)
+    return (args.config, args.output_filename, args.working_dir)
 
 
 if __name__ == "__main__":

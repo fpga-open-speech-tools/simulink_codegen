@@ -33,7 +33,7 @@ class DataplaneConfig:
 
         self.compatible_flag = "Fill me in"
         self.group = "Fill me in"
-        self.vendor = "fe"
+        self.vendor = "al"
         self.target_system = ""
 
         self.clock_rate = 0
