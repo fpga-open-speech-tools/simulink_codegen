@@ -5,18 +5,18 @@ import sys
 import re
 import logging
 from shutil import copyfile
-from quartus.quartus_templates import quartus_templates
+from quartus.quartus_templates import QuartusTemplates
 from quartus.target import Audiomini, Audioblade, Target
 
 
 def create_component_instantiation(custom_components, template):
-    """Creates the tcl string to handle component instantiation for a qsys system
+    """Create the tcl string to handle component instantiation for a qsys system.
 
     Parameters
     ----------
-    config : InputStructure
-        User input structure describing the intended generation
-    template : quartus_templates
+    custom_components : list of str
+        List of custom tcl components to include in the Platform Designer system
+    template : QuartusTemplates
         template object to utilize qsys template
 
     Returns
@@ -33,15 +33,15 @@ def create_component_instantiation(custom_components, template):
 
 
 def create_connections(target, custom_components, template):
-    """Creates the tcl string to handle connections for a qsys system
+    """Create the tcl string to handle connections for a qsys system.
 
     Parameters
     ----------
     target : Target
         NamedTuple that provides information about the target configuration
-    config : InputStructure
-        User input structure describing the intended generation
-    template : quartus_templates
+    custom_components : list of str
+        List of custom tcl components to include in the Platform Designer system
+    template : QuartusTemplates
         template object to utilize qsys template
 
     Returns
@@ -57,39 +57,46 @@ def create_connections(target, custom_components, template):
 
 
 def create_tcl_system_file(target, custom_components, sys_clock_rate_hz, template, working_dir):
-    """Creates a tcl file that describes a qsys system based off a base qsys file
+    """Create a tcl file that describes a qsys system based off a base qsys file.
 
     Parameters
     ----------
     target : Target
         NamedTuple that provides information about the target configuration
-    config : InputStructure
-        User input structure describing the intended generation
-    template : quartus_templates
+    custom_components : list of str
+        List of custom tcl components to include in the Platform Designer system
+    sys_clock_rate_hz : int
+        System clock rate in hertz
+    template : QuartusTemplates
         template object to utilize qsys templates  
     working_dir : string
         Working directory of the generation process
     """
     tcl_file = target.system_name + ".tcl"
-    
-    logger.info("Making tcl file for qsys")
-    copyfile(RES_DIR + target.base_qsys_file, working_dir + target.base_qsys_file)
 
-    quartus_version = re.search(r'.intelFPGA.(\d+\.\d+)', QUARTUS_BIN_DIR).group(1)
+    logger.info("Making tcl file for qsys")
+    copyfile(RES_DIR + target.base_qsys_file,
+             working_dir + target.base_qsys_file)
+
+    quartus_version = re.search(
+        r'.intelFPGA.(\d+\.\d+)', QUARTUS_BIN_DIR).group(1)
 
     with open(working_dir + tcl_file, "w") as out_file:
         out_file.write(
             f"package require -exact qsys {quartus_version}\n")
         out_file.write(f"load_system {{{target.base_qsys_file}}}\n")
-        out_file.write(f"set_instance_parameter_value pll_using_AD1939_MCLK {{gui_output_clock_frequency0}} {{{sys_clock_rate_hz/1_000_000}}}")
-        out_file.write(create_component_instantiation(custom_components, template))
+        out_file.write(
+            f"set_instance_parameter_value pll_using_AD1939_MCLK {{gui_output_clock_frequency0}} {{{sys_clock_rate_hz/1_000_000}}}")
+        out_file.write(create_component_instantiation(
+            custom_components, template))
         out_file.write(create_connections(target, custom_components, template))
         out_file.write(f"save_system {{{target.system_name}}}")
 
 
 def run_cmd_and_log(cmd, log_msg, log_file_path, err_on_fail=True):
-    """Runs a given command as a subprocess, 
-    logs a message to standard out, 
+    """Run a command as a subprocess and log the cmd.
+    
+    Logs a message and the command to standard out 
     and logs the output of the command to a logfile 
 
     Parameters
@@ -123,49 +130,60 @@ def run_cmd_and_log(cmd, log_msg, log_file_path, err_on_fail=True):
         raise ChildProcessError(
             f"The following command failed {cmd} \n The log file can be found at {log_file_path}")
 
+
 def gen_qsys_file(target, custom_components, sys_clock_rate_hz, template, working_dir):
-    """Generates qsys file that represents a system in Platform Designer
-
-    Parameters
-    ----------
-    tcl_file : string
-        Name of tcl file to convert into a qsys file
-    working_dir : string
-        Working directory of the generation process
-    """
-    create_tcl_system_file(target, custom_components, sys_clock_rate_hz, template, working_dir)
-    gen_qsys_file_from_tcl(target.system_name + ".tcl", working_dir)
-
-def gen_qsys_file_from_tcl(tcl_file, working_dir):
-    """Generates the qsys file from the tcl file using qsys-script
-
-    Parameters
-    ----------
-    tcl_file : string
-        Name of tcl file to convert into a qsys file
-    working_dir : string
-        Working directory of the generation process
-    """
-    #TODO: Updates search path from being a hardcoded (relative) path 
-
-    cmd = f'cd {working_dir} && ' + QSYS_BIN_DIR + 'qsys-script ' + f'--script={tcl_file} ' + f'--search-path="../../../../../component_library/**/*,$" '
-    log_file_path = working_dir + "qsys_script.log"
-    log_msg = "Generating qsys file from tcl file"
-    run_cmd_and_log(cmd, log_msg, log_file_path)
-
-def system_exists(system_name, working_dir):
-    return os.path.isfile(working_dir + system_name + ".qsys")
-
-def gen_qsys_system(target, custom_components, sys_clock_rate_hz, template, working_dir):
-    """Generates the Platform Designer system as described by target in the working directory
+    """Generate qsys file that represents a system in Platform Designer.
 
     Parameters
     ----------
     target : Target
         NamedTuple that provides information about the target configuration
-    config : InputStructure
-        User input structure describing the intended generation
-    template : quartus_templates
+    custom_components : list of str
+        List of custom tcl components to include in the Platform Designer system
+    sys_clock_rate_hz : int
+        System clock rate in hertz
+    template : QuartusTemplates
+        template object to utilize qsys templates  
+    working_dir : string
+        Working directory of the generation process
+    """
+    create_tcl_system_file(target, custom_components,
+                           sys_clock_rate_hz, template, working_dir)
+    gen_qsys_file_from_tcl(target.system_name + ".tcl", working_dir)
+
+
+def gen_qsys_file_from_tcl(tcl_file, working_dir):
+    """Generate the qsys file from the tcl file using qsys-script.
+
+    Parameters
+    ----------
+    tcl_file : string
+        Name of tcl file to convert into a qsys file
+    working_dir : string
+        Working directory of the generation process
+    """
+    # TODO: Updates search path from being a hardcoded (relative) path
+
+    cmd = f'cd {working_dir} && ' + QSYS_BIN_DIR + 'qsys-script ' + \
+        f'--script={tcl_file} ' + \
+        f'--search-path="../../../../../component_library/**/*,$" '
+    log_file_path = working_dir + "qsys_script.log"
+    log_msg = "Generating qsys file from tcl file"
+    run_cmd_and_log(cmd, log_msg, log_file_path)
+
+
+def gen_qsys_system(target, custom_components, sys_clock_rate_hz, template, working_dir):
+    """Generate the Platform Designer system as described by the target in the working directory.
+
+    Parameters
+    ----------
+    target : Target
+        NamedTuple that provides information about the target configuration
+    custom_components : list of str
+        List of custom tcl components to include in the Platform Designer system
+    sys_clock_rate_hz : int
+        System clock rate in hertz
+    template : QuartusTemplates
         template object to utilize qsys templates  
     working_dir : string
         Working directory of the generation process
@@ -173,12 +191,15 @@ def gen_qsys_system(target, custom_components, sys_clock_rate_hz, template, work
     ipx_file = "components.ipx"
     copyfile(RES_DIR + ipx_file, working_dir + ipx_file)
 
-    if not(system_exists(target.system_name, working_dir)):
-        gen_qsys_file(target, custom_components, sys_clock_rate_hz, template, working_dir)
+    system_exists = os.path.isfile(working_dir + target.system_name + ".qsys")
+    if not(system_exists):
+        gen_qsys_file(target, custom_components,
+                      sys_clock_rate_hz, template, working_dir)
     gen_qsys_system_from_qsys_file(target.system_name, working_dir)
 
+
 def gen_qsys_system_from_qsys_file(system_name, working_dir):
-    """Generates the qsys file using qsys-generate
+    """Generate the qsys file using qsys-generate.
 
     Parameters
     ----------
@@ -194,9 +215,7 @@ def gen_qsys_system_from_qsys_file(system_name, working_dir):
 
 
 def gen_project_tcl(project_name, target, template, working_dir):
-    """Generates the make_project.tcl file
-    Also copies over the top level VHDL file and
-    base project tcl file into the working directory
+    """Generate the make_project.tcl file and copy over needed files.
 
     Parameters
     ----------
@@ -204,18 +223,17 @@ def gen_project_tcl(project_name, target, template, working_dir):
         Name of the project
     target : Target
         NamedTuple that provides information about the target configuration
-    template : quartus_templates
+    template : QuartusTemplates
         template object to utilize qsys templates  
     working_dir : string
         Working directory of the generation process
     """
-
     base_project_file = target.base_proj_tcl_file
     top_level_vhdl_file = target.top_level_vhdl_file
     original_system = target.original_system
 
     logger.info("Generating make_project.tcl")
-    
+
     with open(working_dir + "make_project.tcl", "w") as proj_file:
         proj_file.write(template.add_quartus_project(
             project_name, target))
@@ -230,7 +248,7 @@ def gen_project_tcl(project_name, target, template, working_dir):
 
 
 def gen_pll_qsys(working_dir):
-    """Generates the phase locked loop component needed for the arria10 configuration
+    """Generate the phase locked loop component needed for the arria10 configuration.
 
     Parameters
     ----------
@@ -240,12 +258,29 @@ def gen_pll_qsys(working_dir):
     pll_file = "pll.qsys"
     copyfile(RES_DIR + "/res/" + pll_file, working_dir + pll_file)
     log_msg = "Generating pll"
-    cmd =  f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {pll_file}'
+    cmd = f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {pll_file}'
     log_file_path = working_dir + "pll_gen.log"
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
+
 def project_with_revision_exists(project_name, project_revision, working_dir):
+    """Check if a Quartus project with the given name and revision exists.
+
+    Parameters
+    ----------
+    project_name : str
+        Name of the Quartus project
+    project_revision : str
+        Name of the project revision
+    working_dir : str
+        Directory to check for the Quartus project
+
+    Returns
+    -------
+    bool
+        True if a project is found with the given name and revision, false otherwise.
+    """
     try:
         with open(working_dir + project_name + ".qpf", "r") as project_file:
             for line in project_file:
@@ -257,7 +292,7 @@ def project_with_revision_exists(project_name, project_revision, working_dir):
 
 
 def gen_project(project_name, target, template, working_dir):
-    """Generates and compiles the project defined in make_project.tcl
+    """Generate and compiles the project defined in make_project.tcl.
 
     Parameters
     ----------
@@ -274,7 +309,23 @@ def gen_project(project_name, target, template, working_dir):
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
+
 def compile_project(project_name, project_revision, template, working_dir):
+    """Compile an existing Quartus project.
+
+    Creates a tcl file to execute the compilitation with. 
+
+    Parameters
+    ----------
+    project_name : str
+        Name of the Quartus project
+    project_revision : str
+        Name of the project revision
+    template : QuartusTemplate
+        Instance of template engine
+    working_dir : str
+        Directory of containing project to compile
+    """
     tcl_file = "compile_project.tcl"
     with open(working_dir + tcl_file, "w") as compile_file:
         compile_file.write(template.add_quartus_compile_project(
@@ -286,8 +337,9 @@ def compile_project(project_name, project_revision, template, working_dir):
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
+
 def gen_rbf(working_dir, target_system):
-    """Converts the sof file to an rbf file
+    """Convert the sof file to an rbf file.
 
     Parameters
     ----------
@@ -303,13 +355,15 @@ def gen_rbf(working_dir, target_system):
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
+
 def init_logging():
+    """Initialize logging for the module."""
     global logger
     logger = logging.getLogger('autogen_quartus')
 
+
 def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz, working_dir=""):
-    """Executes quartus workflow that creates a system and project, compiles it,
-        and converts the output file to an RBF
+    """Execute quartus workflow to create a system, project, compiles it, and convert the output file to an RBF.
 
     Parameters
     ----------
@@ -328,7 +382,7 @@ def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz
     else:
         raise ValueError(
             f"The provided target: {target_system} is not supported")
-    
+
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     global RES_DIR
@@ -337,29 +391,33 @@ def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz
     global QSYS_BIN_DIR
 
     if sys.platform == 'win32':
-        QUARTUS_BIN_DIR = os.environ["QSYS_ROOTDIR"].split("sopc_builder")[0] + "bin64/"
+        QUARTUS_BIN_DIR = os.environ["QSYS_ROOTDIR"].split("sopc_builder")[
+            0] + "bin64/"
     elif sys.platform == 'linux':
-        QUARTUS_BIN_DIR = os.environ["QSYS_ROOTDIR"].split("sopc_builder")[0] + "bin/"
+        QUARTUS_BIN_DIR = os.environ["QSYS_ROOTDIR"].split("sopc_builder")[
+            0] + "bin/"
     else:
         # NOTE: not sure what the most correct exception to raise here is
         raise Exception("You are running on an unsupported OS")
-
 
     QSYS_BIN_DIR = os.environ["QSYS_ROOTDIR"] + "/"
 
     tcl_file = target.system_name + ".tcl"
     qsys_file = target.system_name + ".qsys"
 
-    template = quartus_templates(
+    template = QuartusTemplates(
         len(custom_components), int(target.base_address))
     os.makedirs(working_dir, exist_ok=True)
 
-    gen_qsys_system(target, custom_components, sys_clock_rate_hz, template, working_dir)
+    gen_qsys_system(target, custom_components,
+                    sys_clock_rate_hz, template, working_dir)
 
     project_name = "_".join(custom_components)
     project_revision = project_name + "_" + target.name
     if not(project_with_revision_exists(project_name, project_revision=project_revision, working_dir=working_dir)):
         gen_project(project_name, target, template, working_dir)
-        compile_project(project_name, project_revision=project_revision, template=template, working_dir=working_dir)
+        compile_project(project_name, project_revision=project_revision,
+                        template=template, working_dir=working_dir)
     else:
-        compile_project(project_name, project_revision=project_revision, template=template, working_dir=working_dir)
+        compile_project(project_name, project_revision=project_revision,
+                        template=template, working_dir=working_dir)

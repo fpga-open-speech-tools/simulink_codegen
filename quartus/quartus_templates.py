@@ -55,9 +55,19 @@ project_close
 """
 
 
-class quartus_templates:
+class QuartusTemplates:
+    """Generate templates for Quartus workflow."""
 
     def __init__(self, num_custom_components, baseAddress):
+        """Initialize QuartusTemplates.
+
+        Parameters
+        ----------
+        num_custom_components : [type]
+            [description]
+        baseAddress : [type]
+            [description]
+        """
         self.custom_components_added = 0
         self.num_custom_components = num_custom_components
         self.de10_components_base_address = 20  # Format is 0x0020

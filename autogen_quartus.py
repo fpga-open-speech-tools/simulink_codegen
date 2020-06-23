@@ -3,7 +3,7 @@ import sys
 import logging
 
 from quartus.workflow_config import WorkflowConfig
-from quartus.quartus_workflow import execute_quartus_workflow
+from quartus.workflow import execute_quartus_workflow
 
 
 def main(inputFilename, working_dir, log_to_file=False):
@@ -16,6 +16,7 @@ def main(inputFilename, working_dir, log_to_file=False):
             config.target_system, config.custom_components, config.clock_rate, working_dir)
     finally:
         logger.info("exit")
+
 
 def init_logging(debugLevel, log_to_file=False):
     logger = logging.getLogger('autogen_quartus')
@@ -34,10 +35,9 @@ def init_logging(debugLevel, log_to_file=False):
     logger.setLevel(debugLevel)
     return logger
 
+
 def parseargs():
-    """
-    Parse commandline input arguments.
-    """
+    """Parse commandline input arguments."""
     parser = argparse.ArgumentParser(
         description="Executes the quartus workflow, from creating a system to compiling the project made around that system")
     parser.add_argument('-j', '--json',

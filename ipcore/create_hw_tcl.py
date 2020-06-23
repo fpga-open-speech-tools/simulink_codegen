@@ -261,9 +261,7 @@ def create_source_connection_point(dataplane_config):
 
 
 def parseargs():
-    """
-    Parse commandline input arguments.
-    """
+    """Parse commandline input arguments."""
     parser = argparse.ArgumentParser(
         description="Generates a Platform Design/Qsys component as _hw.tcl file")
     parser.add_argument('-c', '--config',
