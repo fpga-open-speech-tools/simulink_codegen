@@ -89,16 +89,44 @@ disp(['      created vhdl file: ' outfile])
 
 %% Generate the .tcl script to be used by Platform Designer in Quartus
 disp('vgen: Creating .tcl script for Platform Designer.')
-infile = [avalon.entity '.json'];
+config_file = [avalon.entity '.json'];
 % NOTE: platform designer only adds components if they have the _hw.tcl suffix
 outfile = [hdlpath filesep avalon.entity '_avalon_hw.tcl'];
-disp(['file ' infile ' out ' outfile ' path ' hdlpath])
-vgenHwTcl(infile, outfile, hdlpath)
+disp(['file ' config_file ' out ' outfile ' path ' hdlpath])
+vgenHwTcl(config_file, outfile, hdlpath)
 
 disp(['      created tcl file: ' outfile])
 
 disp('vgen: Executing Quartus workflow')
-vgenQuartus(infile, hdlpath + "/quartus/")
+if ispc; second_cmd = "&"; else; second_cmd = ";"; end
+working_dir = hdlpath + "/quartus/";
+quartus_workflow_cmd = "python " + mp.vhdl_codegen_path + "/autogen_quartus.py -j " + config_file ...
+    + " -w " + working_dir + " -l " + second_cmd + " exit &";
+disp(quartus_workflow_cmd)
+system(quartus_workflow_cmd);
+
+fid = fopen("autogen_quartus.log");
+if fid>0
+    % loop until end of file is reached
+    while 1
+        % read the current line
+        where = ftell(fid);
+        line = fgetl(fid);
+        % Print file until exit is encountered
+        if line == -1
+            pause(20/1000)
+            fseek(fid, where, 'bof');
+        elseif line == "exit"
+            break
+        else
+            disp(line)
+        end
+    end
+    % close the file
+    fclose(fid);
+end
+
+%disp("r: ---------------------------------------------------\n" + r)
 disp('Executed Quartus workflow')
 
 %% Generate the device driver code
@@ -114,10 +142,6 @@ disp(['      created Makefile: ' [hdlpath filesep 'Makefile']])
 disp(['      created Kbuild: ' [hdlpath filesep 'Kbuild']])
 
 %% Build kernel module
-% TODO: this needs to be platform independent, but how? Our Windows users 
-%       use a virtual machine to compile the device driver, but that
-%       won't automate very well. Maybe we can build the kernel module 
-%       with Quartus' embedded command shell instead?
 disp('Building kernel module.')
 cd(hdlpath)
 if ispc
@@ -136,12 +160,14 @@ end
 
 % TODO: this file now generates C code, but "vgen" make it seem like it is just VHDL still. This should be changed, and the repository should be reorganized a bit. 
 %       This file shouldn't live in the vhdl folder anymore.
+%% Build Device Tree blob
 project_revision = mp.model_name + "_" + mp.target_system;
-try
-    py.generate.generate_device_tree_overlay(hdlpath + "/quartus/" + mp.target_system + '_system.sopcinfo', project_revision + '.rbf')
-catch e
-    disp(getReport(e))
-end
+sopcinfo_file = hdlpath + "/quartus/" + mp.target_system + '_system.sopcinfo';
+disp("Generating device tree source file")
+disp("python " + mp.dtogen_path + filesep + "dtogen -s " + sopcinfo_file + " -r " + project_revision + " -o " + hdlpath)
+system("python " + mp.dtogen_path + filesep + "dtogen -s " + sopcinfo_file + " -r " + project_revision + " -o " + hdlpath);
+
+disp("Compiling device tree source file")
 
 if ispc
     if system('wsl.exe cd') == 0 

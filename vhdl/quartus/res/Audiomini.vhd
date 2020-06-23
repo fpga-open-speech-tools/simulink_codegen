@@ -17,7 +17,7 @@ USE altera.altera_primitives_components.all;
 -- Signal Names are defined in the DE10-Nano User Manual
 -- http://de10-nano.terasic.com
 -----------------------------------------------------------
- entity DE10Nano_System is
+ entity Audiomini is
 	port(
 		----------------------------------------
 		--  CLOCK Inputs
@@ -198,11 +198,11 @@ USE altera.altera_primitives_components.all;
 		HPs_USB_NXT					: in STD_LOGIC
 
 	);
-end entity DE10Nano_System;
+end entity Audiomini;
 
 
 
-architecture DE10Nano_arch of DE10Nano_System is
+architecture Audiomini_arch of Audiomini is
 
 	
    --------------------------------------------------------------
@@ -560,4 +560,4 @@ begin
 	ADC_CONVST	      <= '0'; 				
   ADC_SCK			      <= '0';			
 	ADC_SDI			      <= '0';		
-end architecture DE10Nano_arch;
+end architecture Audiomini_arch;

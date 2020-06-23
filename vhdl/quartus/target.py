@@ -7,9 +7,9 @@ Target = collections.namedtuple('Target',
 
 Audiomini = Target(name='audiomini', system_name='audiomini_system', device_family='Cyclone V',
               device='5CSEBA6U23I7', base_qsys_file='soc_base_system.qsys', base_proj_tcl_file='audiomini_proj.tcl',
-              files_list=['audiominiNano_System.vhd',
+              files_list=['Audiomini.vhd',
                           'audiomini_system/synthesis/audiomini_system.qip'],
-              top_level_vhdl_file='audiomini_System.vhd', original_system='soc_system', base_address='20', axi_master_name='hps.h2f_lw_axi_master',
+              top_level_vhdl_file='Audiomini.vhd', original_system='soc_system', base_address='20', axi_master_name='hps.h2f_lw_axi_master',
               audio_in='FE_Qsys_AD1939_Audio_Mini_v1_0.Line_In', audio_out='FE_Qsys_AD1939_Audio_Mini_v1_0.Headphone_Out',
               clock_name='clk_hps'
               )

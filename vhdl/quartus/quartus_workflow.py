@@ -3,6 +3,7 @@ import subprocess
 import fileinput
 import sys
 import re
+import logging
 from shutil import copyfile
 from quartus.quartus_templates import quartus_templates
 from quartus.target import Audiomini, Audioblade, Target
@@ -71,7 +72,7 @@ def create_tcl_system_file(target, custom_components, sys_clock_rate_hz, templat
     """
     tcl_file = target.system_name + ".tcl"
     
-    print("Making tcl file for qsys")
+    logger.info("Making tcl file for qsys")
     copyfile(RES_DIR + target.base_qsys_file, working_dir + target.base_qsys_file)
 
     quartus_version = re.search(r'.intelFPGA.(\d+\.\d+)', QUARTUS_BIN_DIR).group(1)
@@ -107,8 +108,9 @@ def run_cmd_and_log(cmd, log_msg, log_file_path, err_on_fail=True):
     ChildProcessError
         Throws error if the command fails
     """
-    print(log_msg)
-    print(cmd.replace("\\", "\\\\"))
+    logger.info(log_msg)
+    logger.info(f"log file can be found at {log_file_path}")
+    logger.info(cmd.replace("\\", "\\\\"))
     with open(log_file_path, "w") as log_file:
         process = subprocess.Popen(cmd,
                                    stdout=log_file,
@@ -170,7 +172,7 @@ def gen_qsys_system(target, custom_components, sys_clock_rate_hz, template, work
     """
     ipx_file = "components.ipx"
     copyfile(RES_DIR + ipx_file, working_dir + ipx_file)
-    
+
     if not(system_exists(target.system_name, working_dir)):
         gen_qsys_file(target, custom_components, sys_clock_rate_hz, template, working_dir)
     gen_qsys_system_from_qsys_file(target.system_name, working_dir)
@@ -212,7 +214,8 @@ def gen_project_tcl(project_name, target, template, working_dir):
     top_level_vhdl_file = target.top_level_vhdl_file
     original_system = target.original_system
 
-    print("Generating make_project.tcl")
+    logger.info("Generating make_project.tcl")
+    
     with open(working_dir + "make_project.tcl", "w") as proj_file:
         proj_file.write(template.add_quartus_project(
             project_name, target))
@@ -244,7 +247,7 @@ def gen_pll_qsys(working_dir):
 
 def project_with_revision_exists(project_name, project_revision, working_dir):
     try:
-        with open(working_dir + project_name, "r") as project_file:
+        with open(working_dir + project_name + ".qpf", "r") as project_file:
             for line in project_file:
                 if f"PROJECT_REVISION = \"{project_revision}\"" in line:
                     return True
@@ -273,10 +276,9 @@ def gen_project(project_name, target, template, working_dir):
 
 def compile_project(project_name, project_revision, template, working_dir):
     tcl_file = "compile_project.tcl"
-    if not(os.path.isfile(working_dir + tcl_file)):
-        with open(working_dir + tcl_file, "w") as compile_file:
-            compile_file.write(template.add_quartus_compile_project(
-                project_name, project_revision))
+    with open(working_dir + tcl_file, "w") as compile_file:
+        compile_file.write(template.add_quartus_compile_project(
+            project_name, project_revision))
 
     log_msg = "Compiling project"
     cmd = f"cd {working_dir} && {QUARTUS_BIN_DIR}quartus_sh -t {tcl_file}"
@@ -301,6 +303,9 @@ def gen_rbf(working_dir, target_system):
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
+def init_logging():
+    global logger
+    logger = logging.getLogger('autogen_quartus')
 
 def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz, working_dir=""):
     """Executes quartus workflow that creates a system and project, compiles it,
@@ -313,6 +318,7 @@ def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz
     working_dir : str, optional
         Working directory of the generation process, by default ""
     """
+    init_logging()
     target = None
 
     if(target_system == "audiomini"):
@@ -322,7 +328,7 @@ def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz
     else:
         raise ValueError(
             f"The provided target: {target_system} is not supported")
-
+    
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     global RES_DIR
