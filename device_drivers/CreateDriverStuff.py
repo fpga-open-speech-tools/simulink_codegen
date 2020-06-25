@@ -48,7 +48,7 @@ def CreatePlatformDriverStruct(inputParams):
     functionString += "  .probe = " + inputParams.device_name + "_probe,\n"
     functionString += "  .remove = " + inputParams.device_name + "_remove,\n"
     functionString += "  .driver = {\n"
-    functionString += "    .name = \"Flat Earth " + inputParams.device_name + " Driver\",\n"
+    functionString += "    .name = \"Audio Logic
     functionString += "    .owner = THIS_MODULE,\n"
     functionString += "    .of_match_table = fe_" + inputParams.device_name + "_dt_ids\n"
     functionString += "  }\n"

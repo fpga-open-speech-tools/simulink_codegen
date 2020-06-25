@@ -30,7 +30,7 @@ def CreateInitFunctionHelper(inputParams):
 def CreateInitFunctionSPI(inputParams):
     functionString = "  // Add the spi master\n"
     functionString += "  struct spi_master *master;\n"
-    functionString += "  pr_info(\"Initializing the Flat Earth " + inputParams.device_name + " module\\n\");\n"
+    functionString += "  pr_info(\"Initializing the Audio Logic
     functionString += "  // Register our driver with the \"Platform Driver\" bus\n"
     functionString += "  ret_val = platform_driver_register(&" + inputParams.device_name + "_platform);\n"
     functionString += "  if (ret_val != 0) {\n"
@@ -72,7 +72,7 @@ def CreateInitFunctionSPI(inputParams):
     functionString += "  // Sending init commands\n"
     functionString += WriteInitCommands(inputParams)
     functionString += "  /********************************************************/\n"
-    functionString += "  pr_info(\"Flat Earth " + inputParams.device_name + " module successfully initialized!\\n\");\n"
+    functionString += "  pr_info(\"Audio Logic
     functionString += "  return 0;\n"
     functionString += "}\n"
     return functionString
@@ -81,7 +81,7 @@ def CreateInitFunctionSPI(inputParams):
 def CreateInitFunctionI2C(inputParams):
     functionString = "  struct i2c_adapter *i2c_adapt;\n"
     functionString += "  struct i2c_board_info i2c_info;\n"
-    functionString += "  pr_info(\"Initializing the Flat Earth " + inputParams.device_name + " module\\n\");\n"
+    functionString += "  pr_info(\"Initializing the Audio Logic
     functionString += "  // Register our driver with the \"Platform Driver\" bus\n"
     functionString += "  ret_val = platform_driver_register(&" + inputParams.device_name + "_platform);\n"
     functionString += "  if (ret_val != 0) {\n"
@@ -110,21 +110,21 @@ def CreateInitFunctionI2C(inputParams):
     functionString += "  // Send some initialization commands\n"
     functionString += WriteInitCommands(inputParams)
     functionString += "  /**************************************************************************/\n"
-    functionString += "  pr_info(\"Flat Earth " + inputParams.device_name + " module successfully initialized!\\n\");\n"
+    functionString += "  pr_info(\"Audio Logic
     functionString += "  return 0;\n"
     functionString += "}\n"
     return functionString
 
 
 def CreateInitFunctionFPGA(inputParams):
-    functionString = "  pr_info(\"Initializing the Flat Earth " + inputParams.device_name + " module\\n\");\n"
+    functionString = "  pr_info(\"Initializing the Audio Logic
     functionString += "  // Register our driver with the \"Platform Driver\" bus\n"
     functionString += "  ret_val = platform_driver_register(&" + inputParams.device_name + "_platform);"
     functionString += "  if (ret_val != 0) {\n"
     functionString += "    pr_err(\"platform_driver_register returned %d\\n\", ret_val);\n"
     functionString += "    return ret_val;\n"
     functionString += "  }\n"
-    functionString += "  pr_info(\"Flat Earth " + inputParams.device_name + " module successfully initialized!\\n\");\n"
+    functionString += "  pr_info(\"Audio Logic
     functionString += "  return 0;\n"
     functionString += "}\n"
     return functionString
