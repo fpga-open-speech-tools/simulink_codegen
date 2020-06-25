@@ -11,14 +11,14 @@ def CreateInitFunctionHelper(inputParams):
     functionString = "/*********************************************************\n"
     functionString += "Generated in CreateInitFunction\n"
     functionString += "*********************************************************/\n"
-    functionString += "static int " + inputParams.deviceName + "_init(void) {\n"
+    functionString += "static int " + inputParams.device_name + "_init(void) {\n"
     functionString += "  int ret_val = 0;\n"
     functionString += "  printk(KERN_ALERT \"FUNCTION AUTO GENERATED AT: " + inputParams.currTime + "\\n\");\n"
-    if inputParams.deviceType == 0:    # SPI device
+    if inputParams.device_type == 0:    # SPI device
         functionString += CreateInitFunctionSPI(inputParams)
-    elif inputParams.deviceType == 1:  # I2C device
+    elif inputParams.device_type == 1:  # I2C device
         functionString += CreateInitFunctionI2C(inputParams)
-    elif inputParams.deviceType == 2:  # FPGA
+    elif inputParams.device_type == 2:  # FPGA
         functionString += CreateInitFunctionFPGA(inputParams)
     else:
         print("FAILURE, device type not recognized")
@@ -30,16 +30,16 @@ def CreateInitFunctionHelper(inputParams):
 def CreateInitFunctionSPI(inputParams):
     functionString = "  // Add the spi master\n"
     functionString += "  struct spi_master *master;\n"
-    functionString += "  pr_info(\"Initializing the Flat Earth " + inputParams.deviceName + " module\\n\");\n"
+    functionString += "  pr_info(\"Initializing the Flat Earth " + inputParams.device_name + " module\\n\");\n"
     functionString += "  // Register our driver with the \"Platform Driver\" bus\n"
-    functionString += "  ret_val = platform_driver_register(&" + inputParams.deviceName + "_platform);\n"
+    functionString += "  ret_val = platform_driver_register(&" + inputParams.device_name + "_platform);\n"
     functionString += "  if (ret_val != 0) {\n"
     functionString += "    pr_err(\"platform_driver_register returned %d\\n\", ret_val);\n"
     functionString += "    return ret_val;\n"
     functionString += "  }\n"
     functionString += "  // Register the device\n"
     functionString += "  struct spi_board_info spi_device_info = {\n"
-    functionString += "    .modalias = \"fe_" + inputParams.deviceName + "_\",\n"
+    functionString += "    .modalias = \"fe_" + inputParams.device_name + "_\",\n"
     functionString += "    .max_speed_hz = " + inputParams.speed + ",\n"
     functionString += "    .bus_num = 0,\n"
     functionString += "    .chip_select = " + inputParams.chipSelect + ",\n"
@@ -72,7 +72,7 @@ def CreateInitFunctionSPI(inputParams):
     functionString += "  // Sending init commands\n"
     functionString += WriteInitCommands(inputParams)
     functionString += "  /********************************************************/\n"
-    functionString += "  pr_info(\"Flat Earth " + inputParams.deviceName + " module successfully initialized!\\n\");\n"
+    functionString += "  pr_info(\"Flat Earth " + inputParams.device_name + " module successfully initialized!\\n\");\n"
     functionString += "  return 0;\n"
     functionString += "}\n"
     return functionString
@@ -81,9 +81,9 @@ def CreateInitFunctionSPI(inputParams):
 def CreateInitFunctionI2C(inputParams):
     functionString = "  struct i2c_adapter *i2c_adapt;\n"
     functionString += "  struct i2c_board_info i2c_info;\n"
-    functionString += "  pr_info(\"Initializing the Flat Earth " + inputParams.deviceName + " module\\n\");\n"
+    functionString += "  pr_info(\"Initializing the Flat Earth " + inputParams.device_name + " module\\n\");\n"
     functionString += "  // Register our driver with the \"Platform Driver\" bus\n"
-    functionString += "  ret_val = platform_driver_register(&" + inputParams.deviceName + "_platform);\n"
+    functionString += "  ret_val = platform_driver_register(&" + inputParams.device_name + "_platform);\n"
     functionString += "  if (ret_val != 0) {\n"
     functionString += "    pr_err(\"platform_driver_register returned %d\\n\", ret_val);\n"
     functionString += "    return ret_val;\n"
@@ -92,17 +92,17 @@ def CreateInitFunctionI2C(inputParams):
     functionString += "     I2C communication\n"
     functionString += "  --------------------------------------------------------*/\n"
     functionString += "  // Register the device\n"
-    functionString += "  ret_val = i2c_add_driver(&" + inputParams.deviceNameAbbrev + "_i2c_driver);\n"
+    functionString += "  ret_val = i2c_add_driver(&" + inputParams.device_name_abbrev + "_i2c_driver);\n"
     functionString += "  if (ret_val < 0) {\n"
     functionString += "    pr_err(\"Failed to register I2C driver\");\n"
     functionString += "    return ret_val;\n"
     functionString += "  }\n"
     functionString += "  i2c_adapt = i2c_get_adapter(0);\n"
     functionString += "  memset(&i2c_info,0,sizeof(struct i2c_board_info));\n"
-    functionString += "  strlcpy(i2c_info.type, \"" + inputParams.deviceNameAbbrev + "_i2c\",I2C_NAME_SIZE);\n"
-    functionString += "  " + inputParams.deviceNameAbbrev + "_i2c_client = i2c_new_device(i2c_adapt,&" + inputParams.deviceNameAbbrev + "_i2c_info);\n"
+    functionString += "  strlcpy(i2c_info.type, \"" + inputParams.device_name_abbrev + "_i2c\",I2C_NAME_SIZE);\n"
+    functionString += "  " + inputParams.device_name_abbrev + "_i2c_client = i2c_new_device(i2c_adapt,&" + inputParams.device_name_abbrev + "_i2c_info);\n"
     functionString += "  i2c_put_adapter(i2c_adapt);\n"
-    functionString += "  if (!" + inputParams.deviceNameAbbrev + "_i2c_client) {\n"
+    functionString += "  if (!" + inputParams.device_name_abbrev + "_i2c_client) {\n"
     functionString += "    pr_err(\"Failed to connect to I2C client\\n\");\n"
     functionString += "    ret_val = -ENODEV;\n"
     functionString += "    return ret_val;\n"
@@ -110,21 +110,21 @@ def CreateInitFunctionI2C(inputParams):
     functionString += "  // Send some initialization commands\n"
     functionString += WriteInitCommands(inputParams)
     functionString += "  /**************************************************************************/\n"
-    functionString += "  pr_info(\"Flat Earth " + inputParams.deviceName + " module successfully initialized!\\n\");\n"
+    functionString += "  pr_info(\"Flat Earth " + inputParams.device_name + " module successfully initialized!\\n\");\n"
     functionString += "  return 0;\n"
     functionString += "}\n"
     return functionString
 
 
 def CreateInitFunctionFPGA(inputParams):
-    functionString = "  pr_info(\"Initializing the Flat Earth " + inputParams.deviceName + " module\\n\");\n"
+    functionString = "  pr_info(\"Initializing the Flat Earth " + inputParams.device_name + " module\\n\");\n"
     functionString += "  // Register our driver with the \"Platform Driver\" bus\n"
-    functionString += "  ret_val = platform_driver_register(&" + inputParams.deviceName + "_platform);"
+    functionString += "  ret_val = platform_driver_register(&" + inputParams.device_name + "_platform);"
     functionString += "  if (ret_val != 0) {\n"
     functionString += "    pr_err(\"platform_driver_register returned %d\\n\", ret_val);\n"
     functionString += "    return ret_val;\n"
     functionString += "  }\n"
-    functionString += "  pr_info(\"Flat Earth " + inputParams.deviceName + " module successfully initialized!\\n\");\n"
+    functionString += "  pr_info(\"Flat Earth " + inputParams.device_name + " module successfully initialized!\\n\");\n"
     functionString += "  return 0;\n"
     functionString += "}\n"
     return functionString

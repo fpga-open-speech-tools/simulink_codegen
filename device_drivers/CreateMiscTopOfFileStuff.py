@@ -5,11 +5,11 @@ def CreateMiscTopOfFile(inputParams):
     functionString += "static struct class *cl;  // Global variable for the device class\n"
     functionString += "static dev_t dev_num;\n\n"
     functionString += "/*********** Device type specific things **************/\n"
-    if inputParams.deviceType == 0:   # SPI Device
+    if inputParams.device_type == 0:   # SPI Device
         functionString = TopOfFileSPIStuff(inputParams, functionString)
-    elif inputParams.deviceType == 1: # I2C Device
+    elif inputParams.device_type == 1: # I2C Device
         functionString = TopOfFileI2CStuff(inputParams, functionString)
-    elif inputParams.deviceType == 2: # FPGA Device
+    elif inputParams.device_type == 2: # FPGA Device
         functionString = TopOfFileFPGAStuff(inputParams, functionString)
     else:
         print("NOT A SPI I2C OR FPGA DEVICE?")
@@ -31,8 +31,8 @@ def TopOfFileSPIStuff(inputParams, functionString):
 
 def TopOfFileI2CStuff(inputParams, functionString):
     functionString += "// Define some I2C stuff\n"
-    functionString += "struct i2c_driver " + inputParams.deviceNameAbbrev + "_i2c_driver;\n"
-    functionString += "struct i2c_client * " + inputParams.deviceNameAbbrev + "_i2c_client;\n"
+    functionString += "struct i2c_driver " + inputParams.device_name_abbrev + "_i2c_driver;\n"
+    functionString += "struct i2c_client * " + inputParams.device_name_abbrev + "_i2c_client;\n"
     functionString += "static const unsigned short normal_i2c[] = {0x35, I2C_CLIENT_END}; // remove? -Tyler\n"
     return functionString
 

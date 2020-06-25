@@ -28,7 +28,7 @@ function writejson(data, filename)
 
 % import python libraries
 py.importlib.import_module('json');
-collections = py.importlib.import_module('collections');
+py.importlib.import_module('collections');
 
 % encode the data
 jsonstr = jsonencode(data);

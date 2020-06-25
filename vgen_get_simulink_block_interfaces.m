@@ -32,7 +32,7 @@ function avalon1 = vgen_get_simulink_block_interfaces(model_params)
 %% Put the model in compile mode  needed to get the CompiledPortDataTypes
 % https://www.mathworks.com/matlabcentral/answers/8679-how-to-get-the-port-types-and-dimensions-for-a-block
 modelName = bdroot;  % get model name
-disp(['Placing the model in compile mode.'])
+disp('Placing the model in compile mode.')
 eval([modelName,'([],[],[],''compile'');']);  % put in compile mode
 
 %% Get the Avalon streaming sink signals
@@ -210,7 +210,7 @@ elseif ~isempty(strfind(typeinfo.type, 'int'))
     end
 
     % extract width
-    width = str2double(regexp(typeinfo.type, '\d+', 'match'))
+    width = str2double(regexp(typeinfo.type, '\d+', 'match'));
     if length(width) == 1
         typeinfo.width = width;
         typeinfo.fractional_bits = 0;

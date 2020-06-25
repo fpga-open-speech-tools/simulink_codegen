@@ -1,22 +1,25 @@
+%% Execute the Autogen process
+
+modelName = bdroot;
+
 % Kill existing compile
-if bdroot ~= "" && strcmp(get_param(bdroot,'SimulationStatus'), 'stopped') == 0
+if modelName ~= "" && strcmp(get_param(modelName,'SimulationStatus'), 'stopped') == 0
     set_param(gcs, 'SimulationCommand', 'stop')
-    cmd = [bdroot,'([],[],[],''term'');'];
+    cmd = [modelName,'([],[],[],''term'');'];
     try
         eval(cmd)
     catch
     end
 end
+
+% If workspace has been cleared, attempts to run sm_run_me_first to initialize mp
 if exist('mp','var') == 0
     sm_run_me_first;
-    %pause(3)
 end
-cmd = [bdroot,'([],[],[],''compile'');'];
-    try
-        eval(cmd)
-    catch
-    end
-%end
-pause(5)
-get_param(bdroot,'SimulationStatus')
+% Attempts to compile the model
+cmd = [modelName,'([],[],[],''compile'');'];
+
+eval(cmd)
+
+% Run through rest of Autogen process
 vgen_process_simulink_model

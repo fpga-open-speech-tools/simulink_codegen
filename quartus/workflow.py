@@ -78,8 +78,7 @@ def create_tcl_system_file(target, custom_components, sys_clock_rate_hz, templat
     copyfile(RES_DIR + target.base_qsys_file,
              working_dir + target.base_qsys_file)
 
-    quartus_version = re.search(
-        r'.intelFPGA.(\d+\.\d+)', QUARTUS_BIN_DIR).group(1)
+    quartus_version = re.search(r'.intelFPGA(_lite)?.(\d+\.\d+)', QUARTUS_BIN_DIR).group(2)
 
     with open(working_dir + tcl_file, "w") as out_file:
         out_file.write(
@@ -95,7 +94,7 @@ def create_tcl_system_file(target, custom_components, sys_clock_rate_hz, templat
 
 def run_cmd_and_log(cmd, log_msg, log_file_path, err_on_fail=True):
     """Run a command as a subprocess and log the cmd.
-    
+
     Logs a message and the command to standard out 
     and logs the output of the command to a logfile 
 
@@ -214,13 +213,15 @@ def gen_qsys_system_from_qsys_file(system_name, working_dir):
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
 
-def gen_project_tcl(project_name, target, template, working_dir):
+def gen_project_tcl(project_name, project_revision, target, template, working_dir):
     """Generate the make_project.tcl file and copy over needed files.
 
     Parameters
     ----------
     project_name : str
         Name of the project
+    project_revision : str
+        Name of the project revision
     target : Target
         NamedTuple that provides information about the target configuration
     template : QuartusTemplates
@@ -236,7 +237,7 @@ def gen_project_tcl(project_name, target, template, working_dir):
 
     with open(working_dir + "make_project.tcl", "w") as proj_file:
         proj_file.write(template.add_quartus_project(
-            project_name, target))
+            project_name, project_revision, target))
     copyfile(RES_DIR + base_project_file, working_dir + base_project_file)
 
     with open(RES_DIR + top_level_vhdl_file, "r") as orig_top_file:
@@ -291,7 +292,7 @@ def project_with_revision_exists(project_name, project_revision, working_dir):
         return False
 
 
-def gen_project(project_name, target, template, working_dir):
+def gen_project(project_name, project_revision, target, template, working_dir):
     """Generate and compiles the project defined in make_project.tcl.
 
     Parameters
@@ -299,7 +300,8 @@ def gen_project(project_name, target, template, working_dir):
     working_dir : string
         Working directory of the generation process
     """
-    gen_project_tcl(project_name, target, template, working_dir)
+    gen_project_tcl(project_name, project_revision,
+                    target, template, working_dir)
     if(target.name == "arria10"):
         gen_pll_qsys(working_dir)
 
@@ -415,9 +417,8 @@ def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz
     project_name = "_".join(custom_components)
     project_revision = project_name + "_" + target.name
     if not(project_with_revision_exists(project_name, project_revision=project_revision, working_dir=working_dir)):
-        gen_project(project_name, target, template, working_dir)
-        compile_project(project_name, project_revision=project_revision,
-                        template=template, working_dir=working_dir)
+        gen_project(project_name, project_revision,
+                    target, template, working_dir)
+        compile_project(project_name, project_revision, template, working_dir)
     else:
-        compile_project(project_name, project_revision=project_revision,
-                        template=template, working_dir=working_dir)
+        compile_project(project_name, project_revision, template, working_dir)
