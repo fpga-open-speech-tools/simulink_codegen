@@ -19,7 +19,7 @@ def CreateFileHeaderInfo(inputParams):
         functionString += "#include <linux/of.h>\n"
     functionString += "#include \"custom_functions.h\"\n"
     functionString += "\nMODULE_LICENSE(\"GPL\");\n"
-    functionString += "MODULE_AUTHOR(\"Tyler Davis <support@flatearthinc.com\");\n"
+    functionString += "MODULE_AUTHOR(\"Tyler Davis <openspeech@flatearthinc.com\");\n"
     functionString += "MODULE_DESCRIPTION(\"Loadable kernel module for the " + inputParams.device_name + "\");\n"
     functionString += "MODULE_VERSION(\"1.0\");\n"
     functionString += "/* End CreateFileHeaderInfo */\n\n\n"

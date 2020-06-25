@@ -24,7 +24,7 @@
 % Audio Logic
 % 985 Technology Blvd
 % Bozeman, MT 59718
-% support@flatearthinc.com
+% openspeech@flatearthinc.com
 
 % XXX: it appears that you can't have multiple models open at the same time, otherwise this functions errors
 

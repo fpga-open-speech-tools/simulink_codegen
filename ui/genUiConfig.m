@@ -27,7 +27,7 @@
 % Audio Logic
 % 985 Technology Blvd
 % Bozeman, MT 59718
-% support@flatearthinc.com
+% openspeech@flatearthinc.com
 
 function genUiConfig(mp, outfile)
 % NOTE: to get jsonencode to create lists when there is only one struct, 
