@@ -1,8 +1,8 @@
-from InputStructureFile import InputStructure
+from InputStructureFile import DriverConfig
 
 
 def CreateInitFunction(inputParams):
-    if not isinstance(inputParams, InputStructure):
+    if not isinstance(inputParams, DriverConfig):
         print("inputParams must be an InputStructure object")
     return CreateInitFunctionHelper(inputParams)
 

@@ -10,7 +10,7 @@ def CreateMiscTopOfFile(inputParams):
     elif inputParams.device_type == 1: # I2C Device
         functionString = TopOfFileI2CStuff(inputParams, functionString)
     elif inputParams.device_type == 2: # FPGA Device
-        functionString = TopOfFileFPGAStuff(inputParams, functionString)
+        pass
     else:
         print("NOT A SPI I2C OR FPGA DEVICE?")
         return ""
@@ -34,24 +34,6 @@ def TopOfFileI2CStuff(inputParams, functionString):
     functionString += "struct i2c_driver " + inputParams.device_name_abbrev + "_i2c_driver;\n"
     functionString += "struct i2c_client * " + inputParams.device_name_abbrev + "_i2c_client;\n"
     functionString += "static const unsigned short normal_i2c[] = {0x35, I2C_CLIENT_END}; // remove? -Tyler\n"
-    return functionString
-
-
-def TopOfFileFPGAStuff(inputParams, functionString):
-    try: # to lookup the pound defined constants from the input params, otherwise use what the HAv8 used and hope that works
-        for i in range(len(inputParams.definedDataConstants)):
-            functionString += "#define " + inputParams.definedDataConstants[i][0] + " " + str(inputParams.definedDataConstants[i][1]) + "\n"
-    except:
-        # These are almost certainly not universal. Should pull these from the params probably
-        functionString += "//TODO: check this. Register memory map. Was not pulled from input params, might want to verify this\n"
-        functionString += "#define BAND_ALL_OFFSET 0x00\n"
-        functionString += "#define BAND1_OFFSET 0x01\n"
-        functionString += "#define BAND2_OFFSET 0x02\n"
-        functionString += "#define BAND3_OFFSET 0x03\n"
-        functionString += "#define BAND4_OFFSET 0x04\n"
-        functionString += "#define LEFT_OFFSET 0x00\n"
-        functionString += "#define RIGHT_OFFSET 0x08\n"
-        functionString += "#define GAIN_OFFSET 0\n"
     return functionString
 
 

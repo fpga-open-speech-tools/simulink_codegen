@@ -84,7 +84,7 @@ hdlpath = [mp.model_path filesep 'hdlsrc' filesep mp.model_abbreviation];
 disp('vgen: Creating Avalon VDHL wrapper.')
 config_file = [avalon.entity '.json'];
 outfile = [hdlpath filesep avalon.entity '_avalon.vhd'];
-system("python3 " + mp.ipcore_codegen_path + filesep + "vgenAvalonWrapper.py -c " + config_file + " -o " + outfile);
+system("python " + mp.ipcore_codegen_path + filesep + "vgenAvalonWrapper.py -c " + config_file + " -o " + outfile);
 disp(['      created vhdl file: ' outfile])
 
 %% Generate the .tcl script to be used by Platform Designer in Quartus
@@ -92,7 +92,7 @@ disp('vgen: Creating .tcl script for Platform Designer.')
 % NOTE: platform designer only adds components if they have the _hw.tcl suffix
 outfile = [hdlpath filesep avalon.entity '_avalon_hw.tcl'];
 disp(['file ' config_file ' out ' outfile ' path ' hdlpath])
-system("python3 " + mp.ipcore_codegen_path + filesep + "create_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile );
+system("python " + mp.ipcore_codegen_path + filesep + "create_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile );
 disp(['      created tcl file: ' outfile])
 
 disp('vgen: Executing Quartus workflow')
@@ -101,7 +101,7 @@ working_dir = hdlpath + "/quartus/";
 
 quartus_workflow_cmd = "python3 " + mp.codegen_path + "/autogen_quartus.py -j " + config_file ...
     + " -w " + working_dir + " -l " + second_cmd + " exit &";
-system(quartus_workflow_cmd);
+%system(quartus_workflow_cmd);
 
 % Stream the Quartus workflow log and display it to the user
 fid = fopen("autogen_quartus.log");
@@ -133,7 +133,7 @@ disp(['      created device driver: ' outfile])
 
 %% Generate kernel module build files
 disp('Creating Makefile and Kbuild.')
-system("python3 " + mp.driver_codegen_path + filesep + "gen_makefile.py " + [hdlpath filesep] + " " + mp.model_name);
+system("python " + mp.driver_codegen_path + filesep + "gen_makefile.py " + [hdlpath filesep] + " " + mp.model_name);
 disp(['      created Makefile: ' [hdlpath filesep 'Makefile']])
 disp(['      created Kbuild: ' [hdlpath filesep 'Kbuild']])
 
