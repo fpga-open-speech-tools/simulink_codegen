@@ -10,7 +10,7 @@
 % Outputs:
 %   mp = simulink model parameters struct, with widget names for each register added
 
-% Copyright 2020 Flat Earth Inc, Montana State University
+% Copyright 2020 Audio Logic
 %
 % THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 % INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -19,10 +19,10 @@
 % ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %
 % Trevor Vannoy
-% Flat Earth Inc
+% Audio Logic
 % 985 Technology Blvd
 % Bozeman, MT 59718
-% support@flatearthinc.com
+% openspeech@flatearthinc.com
 function mp = createLinkerWidgetNames(mp)
 
 numWidgets = containers.Map();

@@ -516,7 +516,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Audio_Mini_GPIO_0[33
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Audio_Mini_GPIO_1[12]
 set_global_assignment -name FAMILY "Cyclone V"
 set_global_assignment -name DEVICE 5CSEBA6U23I7
-set_global_assignment -name TOP_LEVEL_ENTITY DE10Nano_System
+set_global_assignment -name TOP_LEVEL_ENTITY Audiomini
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP "-40"
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"

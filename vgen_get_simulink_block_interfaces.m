@@ -12,7 +12,7 @@
 %   The data structure avalon that contains the interface signals for the
 %   dataplane block
 %
-% Copyright 2019 Flat Earth Inc
+% Copyright 2019 Audio Logic
 %
 % THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 % INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -21,10 +21,10 @@
 % ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %
 % Ross K. Snider
-% Flat Earth Inc
+% Audio Logic
 % 985 Technology Blvd
 % Bozeman, MT 59718
-% support@flatearthinc.com
+% openspeech@flatearthinc.com
 
 % XXX: it appears that you can't have multiple models open at the same time, otherwise this functions errors
 
@@ -32,7 +32,7 @@ function avalon1 = vgen_get_simulink_block_interfaces(model_params)
 %% Put the model in compile mode  needed to get the CompiledPortDataTypes
 % https://www.mathworks.com/matlabcentral/answers/8679-how-to-get-the-port-types-and-dimensions-for-a-block
 modelName = bdroot;  % get model name
-disp(['Placing the model in compile mode.'])
+disp('Placing the model in compile mode.')
 eval([modelName,'([],[],[],''compile'');']);  % put in compile mode
 
 %% Get the Avalon streaming sink signals
@@ -210,7 +210,7 @@ elseif ~isempty(strfind(typeinfo.type, 'int'))
     end
 
     % extract width
-    width = str2double(regexp(typeinfo.type, '\d+', 'match'))
+    width = str2double(regexp(typeinfo.type, '\d+', 'match'));
     if length(width) == 1
         typeinfo.width = width;
         typeinfo.fractional_bits = 0;

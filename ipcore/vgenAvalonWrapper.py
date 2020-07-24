@@ -6,7 +6,7 @@
 #
 #     @author Trevor Vannoy, Aaron Koenigsberg
 #     @date 2019
-#     @copyright 2019 Flat Earth Inc
+#     @copyright 2019 Audio Logic
 #
 #     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 #     INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -15,10 +15,10 @@
 #     ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #     Trevor Vannoy
-#     Flat Earth Inc
+#     Audio Logic
 #     985 Technology Blvd
 #     Bozeman, MT 59718
-#     support@flatearthinc.com
+#     openspeech@flatearthinc.com
 
 import json
 import argparse
@@ -334,7 +334,7 @@ def create_component_reg_defaults(mm_flag, mm_signal):
     if mm_flag == 1:
         for i in range(len(mm_signal)):
             name = mm_signal[i]["name"]
-            name2 = name.replace("Register_Control_", "")
+            name2 = name.lower().replace("register_control_", "")
             def_val = mm_signal[i]["default_value"]
             datatype = mm_signal[i]["data_type"]
             typestr = datatype['type']
@@ -373,15 +373,15 @@ def convert_default_value(value, datatype):
 def parseargs():
     parser = argparse.ArgumentParser(description=\
         "Generate VHDL code for Avalon streaming and memory-mapped interfaces.")
-    parser.add_argument('infile',
+    parser.add_argument('-c','--config_file',
         help="json file containing the interface and register specifications")
     parser.add_argument('-v', '--verbose', action='store_true',
         help="verbose output")
     parser.add_argument('-p', '--print', action='store_true', dest='print_output',
         help="print out the generated vhdl code")
-    parser.add_argument('outfile', help="the name of the output vhdl file")
+    parser.add_argument('-o', '--outfile', help="the name of the output vhdl file")
     args = parser.parse_args()
-    return (args.infile, args.outfile, args.verbose, args.print_output)
+    return (args.config_file, args.outfile, args.verbose, args.print_output)
 
 
 # TODO: make a default filename?

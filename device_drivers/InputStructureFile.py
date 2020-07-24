@@ -1,23 +1,24 @@
+import json
+
 class InputStructure:
     def __init__(self):
 
         # device specifications
-        self.deviceName = None
-        self.deviceType = None  # 0 for spi, 1 for i2c, 2 for memory mapped device
-        self.deviceNameAbbrev = None  # some vars only have an abbrev of the device name, i.e. tpa instead of TPA6130A2
-        self.compatibleFlag = None  # something like "dev,fe-AD1939" gets inserted into .compatible
-        self.deviceID = None  # An address(?), only used i think for i2c
+        self.device_name = None
+        self.device_type = None  # 0 for spi, 1 for i2c, 2 for memory mapped device
+        self.device_name_abbrev = None  
+        self.compatible_flag = None  # Sets the compatible key on Linux, telling it what devices it is compatible with. Ex: "dev,fe-AD1939"
+        self.device_i2c_address = None
+        self.vendor = "al" 
 
         # device attribute specifications
-        self.deviceAttributes = None  # list of string attributes
+        self.device_attributes = None  # list of string attributes
         self.attributeDataTypes = None  # list of string data types
         self.attributeDataTypeSigned = None # list of signed/unsigned
         self.attributeDataTypeFraction = None # list of fraction widths
         self.attributeDataTypeWidth = None # list of fraction widths
         self.attributePerms = None  # attribute permissions, list of "0446" or whatever the desired permission is
         #                             for the attribute at the same index
-        self.attributeReadIsNormal = None  # is a list of bool vals that informs whether to insert a stub or definition
-        self.attributeWriteIsNormal = None  # same as above but for writes
         self.attrWriteCommBytes = None  # number of bytes in a command. Should be same as len(self.attrWritComm[0])
         self.attrWriteComm = None  # of the form [ ["0xNN", "0xNN", ..] ..] for however many bytes a command contains,
         #                            and however many attributes there are. They are matched according to index
@@ -44,3 +45,73 @@ class InputStructure:
 
         # min and max for each attribute
         # look for data type var
+
+    def parse_json(self, jsonFileName):
+        file = open(jsonFileName, "r")
+        fileStr = file.read()
+        jsonDict = json.loads(fileStr)
+        inputStruct = InputStructure()
+
+        inputStruct.device_name = jsonDict['linux_device_name']
+        inputStruct.device_type = 2
+        inputStruct.device_name_abbrev = jsonDict['model_abbreviation']
+        inputStruct.compatible_flag = f'dev,{inputStruct.vendor}- {inputStruct.device_name}' 
+        attributes = jsonDict['avalon_memorymapped']['register']
+        inputStruct.device_attributes = []
+        for attr in attributes:
+            inputStruct.device_attributes.append(DeviceAttribute.parse_json(attr))
+        return inputStruct
+
+class DataType:
+    """Represent a fixed point number."""
+
+    def __init__(self, name, width, signed = False, fractional_bits = 0):
+        """Initialize a fixed point numerical data type.
+
+        Parameters
+        ----------
+        name  : str
+            Name of the data type
+        width : int
+            Number of bits in the data type
+        signed : bool, optional
+            True if the data type is signed, false if unsigned. By default False
+        fractional_bits : int, optional
+            Number of fractional bits in the data type, by default 0
+        """
+        self.name = name
+        self.signed = signed
+        self.width = width
+        self.fractional_bits = fractional_bits
+
+    @staticmethod
+    def parse_json(dt_json):
+        """Parse JSON object into DataType."""
+        return DataType(dt_json['type'], dt_json['signed'], dt_json['width'], dt_json['fractional_bits'])
+class DeviceAttribute:
+    """Represent a device attribute on a Linux device driver."""
+
+    def __init__ (self, name, data_type = None, offset = 0, permissions = "0664"):
+        """Initialize a representation of a Linux device driver attribute.
+
+        Parameters
+        ----------
+        name : str, optional
+            [description], by default ""
+        data_type : [type], optional
+            [description], by default None
+        offset : int, optional
+            [description], by default 0
+        permissions : str, optional
+            [description], by default "0664"
+        """
+        self.name = name
+        self.data_type = data_type
+        self.permissions = permissions
+        self.offset = offset
+
+    @staticmethod
+    def parse_json(dev_attr_json):
+        """Parse JSON object into DeviceAttribute."""
+        data_type = DataType.parse_json(dev_attr_json["data_type"])
+        return DeviceAttribute(dev_attr_json['name', data_type, dev_attr_json['reg_num']])
