@@ -406,7 +406,7 @@ begin
             hps_spim0_rxd                       => AD1939_spi_COUT,                                                        
             hps_spim0_ss_in_n                   => '1',                                                 
             hps_spim0_ssi_oe_n                  => open,                                                  
-            hps_spim0_ss_0_n                    => HPS_spi_ss_n,                                                     
+            hps_spim0_ss_0_n                    => AD1939_spi_CLATCH_n,                                                     
             hps_spim0_ss_1_n                    => open,                                                     
             hps_spim0_ss_2_n                    => open,                                                    
             hps_spim0_ss_3_n                    => open,                                                     
@@ -506,28 +506,6 @@ begin
         );
 
 				
-				
-				
-		
-   ---------------------------------------------------------------------------------------------
-	-- Extend the SPI slave select hold time 
-	---------------------------------------------------------------------------------------------
-		holdSpiLatch : process (FPGA_CLK1_50)
-		begin
-			if rising_edge(FPGA_CLK1_50) then
-				if HPS_spi_ss_n = '0' then
-					AD1939_spi_clatch_counter   <= (others=>'0');                  -- reset counter
-					AD1939_spi_CLATCH_n         <= '0';
-				elsif AD1939_spi_clatch_counter < x"00000040" then
-					AD1939_spi_clatch_counter   <= AD1939_spi_clatch_counter + 1;  -- increment counter
-					AD1939_spi_CLATCH_n         <= '0';                            -- hold low until counter reaches threshold
-				else
-					AD1939_spi_CLATCH_n         <= '1';                            -- release clatch
-				end if;
-			end if;
-		end process;
-		
-		
    ---------------------------------------------------------------------------------------------
 	-- Tri-state buffer the I2C signals
 	---------------------------------------------------------------------------------------------
