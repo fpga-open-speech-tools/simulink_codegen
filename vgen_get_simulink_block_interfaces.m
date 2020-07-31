@@ -49,7 +49,7 @@ if (isempty(avalon_sink_signals)==0) % The avalon streaming sink exists
             if index==1 % get parent name, which will be the entity name
                 parent = get_param(h,'Parent');  % get parent name with path
                 split = strsplit(parent,'/');    % split string into parts separated by '/'
-                avalon1.entity = [model_params.model_abbreviation '_' split{end}];     % get the last string
+                avalon1.entity = [model_params.modelAbbreviation '_' split{end}];     % get the last string
             end
             p=get_param(h,'CompiledPortDataTypes');
             avalon1.avalon_sink.signal{index}.name        = get(h,'PortName');
@@ -105,10 +105,8 @@ if (isempty(register_names)==0) % The avalon memory mapped interface exists
             avalon1.avalon_memorymapped.register{index}.reg_num   = index - 1;
             Nregisters = length(model_params.register);
             for j=1:Nregisters
-                if strcmpi(register_name,model_params.register(j).name)  % get the register with the same name
-                    avalon1.avalon_memorymapped.register{index}.default_value = model_params.register(j).default;
-                    avalon1.avalon_memorymapped.register{index}.min_value     = model_params.register(j).min;
-                    avalon1.avalon_memorymapped.register{index}.max_value     = model_params.register(j).max;
+                if strcmpi(register_name,model_params.register{j}.name)  % get the register with the same name
+                    avalon1.avalon_memorymapped.register{index}.default_value = model_params.register{j}.value;
                 end
             end
             index = index + 1;

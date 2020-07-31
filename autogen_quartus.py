@@ -25,6 +25,8 @@ def main(config_filepath, working_dir, log_to_file=False):
         config = WorkflowConfig.parse_json(config_filepath)
         execute_quartus_workflow(
             config.target_system, config.custom_components, config.clock_rate, working_dir)
+    except: 
+        logger.exception('')
     finally:
         # Is logged to tell anything reading the log that the workflow is over.
         # Is used by Matlab side when streaming the log to the Matlab command window 
