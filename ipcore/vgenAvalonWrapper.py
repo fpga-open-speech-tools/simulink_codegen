@@ -251,7 +251,7 @@ def create_component_declaration(clock, entity, sink_flag, sink_signal, mm_flag,
     decl = "component " + entity + "\n"
     decl += indent * 1 + "port(\n"
     decl += indent * 2 + "clk".ljust(28, ' ') + ": in  std_logic; -- clk_freq = " + str(clock['frequency']) + " Hz, period = " + str(clock['period']) + "\n"
-    decl += indent * 2 + "reset".ljust(28, ' ') + ": in  std_logic;\n"
+    decl += indent * 2 + "reset_x".ljust(28, ' ') + ": in  std_logic;\n"
     decl += indent * 2 + "clk_enable".ljust(28, ' ') + ": in  std_logic;\n"
     if sink_flag == 1:
         for i in range(len(sink_signal)):
@@ -291,7 +291,7 @@ def create_component_instantiation(ts_system, entity, sink_flag, sink_signal, mm
     inst = "u_" + entity + " : " + entity + "\n"
     inst += indent * 1 + "port map(\n"
     inst += (indent * 2 + "clk").ljust(32, ' ') + "=>  clk,\n"
-    inst += (indent * 2 + "reset").ljust(32, ' ') + "=>  reset,\n"
+    inst += (indent * 2 + "reset_x").ljust(32, ' ') + "=>  reset,\n"
     inst += (indent * 2 + "clk_enable").ljust(32, ' ') + "=>  '1',\n"
     if sink_flag == 1:
         for i in range(len(sink_signal)):
