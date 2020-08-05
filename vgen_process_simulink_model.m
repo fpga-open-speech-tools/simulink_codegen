@@ -3,7 +3,7 @@
 % This script parses the simulink model and extracts the interface signals
 % and puts this information in a JSON file.
 
-% Copyright 2019 Flat Earth Inc
+% Copyright 2019 Audio Logic
 %
 % THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 % INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -12,10 +12,10 @@
 % ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %
 % Ross K. Snider, Trevor Vannoy
-% Flat Earth Inc
+% Audio Logic
 % 985 Technology Blvd
 % Bozeman, MT 59718
-% support@flatearthinc.com
+% openspeech@flatearthinc.com
 
 
 %% Parse the Simulink Model (currently opened model)
@@ -64,13 +64,6 @@ avalon.target_system        = mp.target_system;
 %% Save the avalon structure to a json file and a .mat file
 writejson(avalon, [avalon.entity,'.json'])
 save([avalon.entity '_avalon'], 'avalon')
-
-%% Create UI config files
-disp('Creating linker json file.')
-mp = createLinkerWidgetNames(mp);
-genLinkerConfig(mp, ['Linker_', mp.model_name, '.json']);
-disp('Creating UI config json file.')
-genUiConfig(mp, ['UI_', mp.model_name, '.json']);
 
 %% Generate the Simulink model VHDL code
 
