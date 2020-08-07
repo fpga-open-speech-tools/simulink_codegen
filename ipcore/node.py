@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 import os
+from shutil import copyfile
+import pathlib
 
-from .util import tab
+from .util import tab, num_to_bitstring
 
 class BaseVHDLNode(ABC):
     def __init__(self, name):
@@ -29,26 +31,43 @@ class Library(BaseVHDLNode):
         return vhdl
 
 class VHDLFile(BaseVHDLNode):
-    def __init__(self, name):
+    def __init__(self, name, libraries=None):
         super().__init__(name)
+        self.libraries = libraries or []
     @abstractmethod
     def generate(self):
         """Generate VHDL code."""
     def write(self, output_dir=""):
+        """Write file to the filesystem.
+
+        Copies packages used in the work library to the output directory as well.
+
+        Parameters
+        ----------
+        output_dir : str, optional
+            Output directory to write file to, by default "" which results in the current directory
+        """
         if output_dir != "" and not output_dir.endswith(os.sep):
             output_dir += os.sep
 
         with open(output_dir + self.name + ".vhd", 'w') as vhdl_file:
             vhdl_file.write(self.generate())
+        
+        work_library = next((library for library in self.libraries if library.name == "work"), None)
+        cur_dir = pathlib.Path(os.path.realpath(__file__)).parent.name
+
+        if work_library is not None:
+            for package in work_library.packages:
+                if os.path.isfile(cur_dir + "/" + package + ".vhd"):
+                    copyfile(cur_dir + "/" + package + ".vhd", output_dir + package + ".vhd")
 
 class EntityFile(VHDLFile):
     """Represents a VHDL entity file."""
 
     def __init__(self, name, entity, architecture=None, libraries=None):
-        super().__init__(name)
+        super().__init__(name, libraries)
         self.entity = entity
         self.architecture = architecture
-        self.libraries = libraries or []
     def generate(self):
         """Generate a VHDL entity file."""
         vhdl = ""
@@ -61,7 +80,7 @@ class EntityFile(VHDLFile):
         return vhdl
 
 class Signal(BaseVHDLNode):
-    def __init__(self, name, length=1, default_value=None, data_type=None):
+    def __init__(self, name, length=1, default_value=None, data_type=None, underlying_data_type=None):
         super().__init__(name)
         self.length = length
         self.default_value = default_value
@@ -69,16 +88,89 @@ class Signal(BaseVHDLNode):
         if data_type is None:
             data_type = self._get_data_type()
         self.data_type = data_type
-
+        self.underlying_data_type = underlying_data_type
     def generate(self):
         """Generate a VHDL signal."""
-        print(self.name + " has length: " + str(self.length))
         if self.length == 1:
             type_declaration = self.data_type
         else:
-            length_test = self.length - 1
             type_declaration = f"{self.data_type}({(self.length - 1)} downto 0)"
-        return f"signal {self.name.ljust(32)} : {type_declaration} := {self.default_value};\n"
+        if self.default_value is not None:
+            default_str = f" := {self._get_default_str()}"
+        else:
+            default_str = ""
+        return f"signal {self.name.ljust(32)} : {type_declaration}{default_str};\n"
+    def generate_assignment(self, new_signal_value):
+        """Generate VHDL assignment to this signal, including necessary resizing.
+
+        Resizes using underlying data type if possible.
+        VHDL data types must match except for std_logic and std_logic_vector.
+        For assignmnents between std_logic and std_logic_vector,
+        the first bit is where data is assumed to be stored.
+
+        Parameters
+        ----------
+        new_signal_value : Signal
+            signal being assigned to this. VHDL data types must match except for std_logic and std_logic_vector
+
+        Returns
+        -------
+        str
+            VHDL code to assign new_signal_value to this signal
+        """
+        if self.length == 1:
+            if new_signal_value.length == 1:
+                right_hand_side = new_signal_value.name
+            else:
+                right_hand_side = f"{new_signal_value.name}(0)"
+        elif new_signal_value.length == 1:
+            right_hand_side = f"(0 => {new_signal_value.name}, others => '0')"
+        else:
+            right_hand_side = self._get_right_hand_side_vector_value(new_signal_value)
+        return f"{self.name} <= {right_hand_side};\n"
+    def _get_right_hand_side_vector_value(self, new_signal_value):
+        new_data_type = new_signal_value.underlying_data_type
+        if self.underlying_data_type is None or new_data_type is None:
+            if self.length == new_signal_value.length:
+                right_hand_side = new_signal_value.name
+            elif self.underlying_data_type == new_data_type:
+                # Both have no underlying_data_type, so just resize it
+                right_hand_side = f"std_logic_vector(resize(unsigned({new_signal_value.name}), {self.length}))"
+            elif self.length > new_signal_value.length and new_data_type is not None:
+                # If extending signal, don't worry that assigment is to signal with no underlying data type
+                conversion = "signed" if new_data_type.signed else "unsigned"
+                right_hand_side = f"std_logic_vector(resize({conversion}({new_signal_value.name}), {self.length}))"
+            elif self.underlying_data_type is not None:
+                conversion = "signed" if self.underlying_data_type.signed else "unsigned"
+                right_hand_side = f"std_logic_vector(resize({conversion}({new_signal_value.name}), {self.length}))"
+            else:
+                raise ValueError("Assigning signals of different length requires they either both or neither have underlying data types.\n"
+                                 f"Attemped assigning {new_signal_value.name} to {self.name}")
+        elif self.underlying_data_type == new_data_type:
+            right_hand_side = new_signal_value.name
+        else:
+            if new_signal_value.data_type == "std_logic_vector":
+                conversion = "signed" if new_data_type.signed else "unsigned"
+                input_value = f"{conversion}({new_signal_value.name})"
+            else:
+                input_value = new_signal_value.name
+            fixed_inputs = f"{input_value}, {new_signal_value.length}, {new_data_type.frac_len}, " \
+            + f"{self.length}, {self.underlying_data_type.frac_len}"
+
+            right_hand_side = f"resize_fixed({fixed_inputs})"
+            if self.data_type == "std_logic_vector":
+                right_hand_side = f"std_logic_vector({right_hand_side})"
+        return right_hand_side
+    def _get_default_str(self):
+        if (not isinstance(self.default_value, str)) and self.underlying_data_type is not None:
+            word_len = self.underlying_data_type.word_len
+            frac_len = self.underlying_data_type.frac_len
+            if word_len == 1:
+                default_bit_string = f"'{self.default_value}'"
+            else:
+                default_bit_string = num_to_bitstring(self.default_value, word_len, frac_len)
+            return default_bit_string
+        return str(self.default_value)
     def _get_data_type(self):
         if self.length == 1:
             return "std_logic"
@@ -91,12 +183,11 @@ class LiteralSignal(Signal):
             name = f"\"{value}\""
         super().__init__(name, len(value), value)
 class Port(Signal):
-    def __init__(self, direction, name, length=1, data_type=None):
-        super().__init__(name, length, None, data_type)
+    def __init__(self, direction, name, length=1, data_type=None, underlying_data_type=None):
+        super().__init__(name, length, None, data_type, underlying_data_type)
         self.direction = direction
     def generate(self):
         """Generate a VHDL port."""
-        print(self.name + " has length: " + str(self.length))
         if self.length == 1:
             type_declaration = self.data_type
         else:
@@ -127,9 +218,28 @@ class Entity(BaseVHDLNode):
         vhdl_string += "\n"
         vhdl_string += tab() + ");\n"
         return vhdl_string
-    def getPort(self, name):
-        return next(port for port in self.ports if port.name == name)
-    def getPorts(self, *names):
+    def get_port(self, name):
+        """Get entity port by name.
+
+        Parameters
+        ----------
+        name : str
+            Name of port to retrieve
+
+        Returns
+        -------
+        Port, None
+            Returns entity port with the given name if found, otherwise None.
+        """
+        return next((port for port in self.ports if port.name == name), None)
+    def get_ports(self, *names):
+        """Get ports by name.
+
+        Returns
+        -------
+        list of Port
+            A list of Ports found matching the names given.
+        """
         return filter(lambda port: port.name in names, self.ports)
 class Component(Entity):
     def __init__(self, name, ports):
@@ -158,18 +268,18 @@ class PortMap(BaseVHDLNode):
         vhdl += tab(2)
         vhdl += (", \n" + tab(2)).join(port_assignments)
         vhdl += "\n"
-        vhdl += ");\n"
+        vhdl += ");\n\n"
         return vhdl
 
     def _create_signal_str(self, port):
         signal = self._map.get(port)
         if signal is None:
             return "open"
-        if port.length == signal.length:
-            return signal.name
-        # Handle signed vs unsigned and resizing here
-            
-        #return signal_name
+        if port.length != signal.length:
+            raise ValueError("Port assignments must be of equal length\n" + f"Attempted assigning {signal.name} to {port.name}")
+        return signal.name
+        
+
 class Architecture(BaseVHDLNode):
     def __init__(self, name, entity):
         super().__init__(name)
@@ -177,6 +287,7 @@ class Architecture(BaseVHDLNode):
         self.signals = []
         self.processes = []
         self.components = []
+        self.signal_assignments = {}
     def generate(self):
         """Generate a VHDL Architecture."""
         vhdl = f"architecture {self.name} of {self.entity.name} is\n\n"
@@ -189,11 +300,28 @@ class Architecture(BaseVHDLNode):
         vhdl += "begin\n\n"
         for component in self.components:
             vhdl += component.port_map.generate()
+        for target, value in self.signal_assignments.items():
+            vhdl += target.generate_assignment(value)
+        vhdl += "\n"
         for process in self.processes:
             vhdl += process.generate()
         
         vhdl += "end architecture;\n"
         return vhdl
+    def get_signal(self, name):
+        """Get architecture signal by name.
+
+        Parameters
+        ----------
+        name : str
+            Name of signal to retrieve
+
+        Returns
+        -------
+        Signal, None
+            Returns signal with the given name if found, otherwise None.
+        """
+        return next((signal for signal in self.signals if signal.name == name), None)
 
 class Process(BaseVHDLNode):
     def __init__(self, name, sensitivity_list=None, logic=""):

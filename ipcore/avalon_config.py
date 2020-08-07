@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from .util import Register, Audio
+from .util import Register, Audio, DataType
 
 class AvalonConfig:
     """Describe configuration to generate avalon wrapper."""
@@ -36,17 +36,19 @@ class AvalonConfig:
         target = modeljson["system"]["target"]
         json_audio_in = modeljson["system"]["audioIn"]
         audio_in = Audio(
-            json_audio_in["wordLength"],
-            json_audio_in["fractionLength"], 
-            json_audio_in["signed"],
+            DataType(
+                json_audio_in["wordLength"],
+                json_audio_in["fractionLength"],
+                json_audio_in["signed"]),
             json_audio_in["numberOfChannels"]
         )
 
         json_audio_out = modeljson["system"]["audioOut"]
         audio_out = Audio(
-            json_audio_out["wordLength"],
-            json_audio_out["fractionLength"], 
-            json_audio_out["signed"],
+            DataType(
+                json_audio_out["wordLength"],
+                json_audio_out["fractionLength"],
+                json_audio_out["signed"]),
             json_audio_out["numberOfChannels"]
         )
 
@@ -55,9 +57,10 @@ class AvalonConfig:
         for reg in json_registers:
             registers.append(Register(
                 reg["name"],
-                reg["dataType"]["wordLength"],
-                reg["dataType"]["fractionLength"],
-                reg["dataType"]["signed"],
+                DataType(
+                    reg["dataType"]["wordLength"],
+                    reg["dataType"]["fractionLength"],
+                    reg["dataType"]["signed"]),
                 reg["defaultValue"]
                 ))
         return AvalonConfig(target, audio_in, audio_out, registers, working_dir)
