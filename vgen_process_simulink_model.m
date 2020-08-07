@@ -17,35 +17,6 @@
 % Bozeman, MT 59718
 % openspeech@flatearthinc.com
 
-
-%% Parse the Simulink Model (currently opened model)
-% We parse the model to get the Avalon signals and control registers we need for the Avalon vhdl wrapper
-disp(['vgen: Parsing Simulink model: ' mp.modelName '. Please wait until you see the message "vgen: Finished."'])
-try
-    % turn off fast sim so that the model runs at the system clock rate
-    mp.fastsim_flag = 0;
-    % turn off the simulation prompts and the stop callbacks when running HDL workflow (otherwise this runs at each HDL workflow step)
-    mp.sim_prompts = 0;   
-catch ME
-    % Terminate the compile mode if an error occurs while the model
-    % has been placed in compile mode. Otherwise the model will be frozen
-    % and you can't quit Matlab
-    cmd = [bdroot,'([],[],[],''term'');'];
-    eval(cmd)
-
-    disp('***************************************************************************');
-    disp('Error occurred in function vgen_get_simulink_block_interfaces(mp)');
-    disp(['line number: ' num2str(ME.stack(1).line)])
-    disp(ME.message)
-    disp('***************************************************************************');
-
-    % reset fast simulation flag so running the model simulation isn't so slow after generating code. 
-    mp.fastsim_flag = 1;
-
-    % turn simulation prompts and callbacks back on for normal simulation.
-    mp.sim_prompts = 1;
-end
-
 %% Generate the Simulink model VHDL code
 
 % run the hdl coder
