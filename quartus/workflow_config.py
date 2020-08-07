@@ -31,7 +31,6 @@ class WorkflowConfig:
             in_str = file.read()
             json_dict = json.loads(in_str)
             config = WorkflowConfig()
-            print(json_dict)
             config.clock_rate = json_dict['system']['systemClockFrequency']
             config.target_system = json_dict['system']['target']
             devices = json_dict['devices']

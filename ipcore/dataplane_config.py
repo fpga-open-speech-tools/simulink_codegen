@@ -68,13 +68,8 @@ class DataplaneConfig:
             input_struct = DataplaneConfig()
             modelName = json_dict.devices[0].name
             input_struct.name = modelName
-            #input_struct.quartus_synth_top_level = json_dict['entity'] + "_avalon"
-            #input_struct.vhdl_top_level_file = json_dict['model_abbreviation'] + "_dataplane_avalon.vhd"
             input_struct.group = modelName
             input_struct.vendor = "al"
-            #input_struct.compatible_flag = f"dev,{input_struct.vendor}-" + modelName
-            #input_struct.clock_rate = json_dict['clocks']['system_frequency_Hz']
-            #input_struct.clock_abbrev = "clk"
             input_struct.display_name = modelName
             input_struct.model_abbreviation = modelName
 

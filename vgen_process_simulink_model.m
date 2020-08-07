@@ -26,7 +26,6 @@ try
     mp.fastsim_flag = 0;
     % turn off the simulation prompts and the stop callbacks when running HDL workflow (otherwise this runs at each HDL workflow step)
     mp.sim_prompts = 0;   
-    %avalon = vgen_get_simulink_block_interfaces(mp);
 catch ME
     % Terminate the compile mode if an error occurs while the model
     % has been placed in compile mode. Otherwise the model will be frozen
@@ -46,29 +45,6 @@ catch ME
     % turn simulation prompts and callbacks back on for normal simulation.
     mp.sim_prompts = 1;
 end
-
-%% save the specified clock frequencies
-% avalon.clocks.sample_frequency_Hz   = mp.Fs;
-% avalon.clocks.sample_period_seconds = mp.Ts;
-% avalon.clocks.system_frequency_Hz   = mp.Fs_system;
-% avalon.clocks.system_period_seconds = mp.Ts_system;
-
-%% save the device info
-% avalon.model_name           = mp.model_name;
-% avalon.model_abbreviation   = mp.model_abbreviation;
-% avalon.quartus_path         = mp.quartus_path;
-% avalon.target_system        = mp.target_system;
-
-%% Save the avalon structure to a json file and a .mat file
-% writejson(avalon, [avalon.entity,'.json'])
-% save([avalon.entity '_avalon'], 'avalon')
-
-%% Create UI config files
-%disp('Creating linker json file.')
-%mp = createLinkerWidgetNames(mp);
-%genLinkerConfig(mp, ['Linker_', mp.model_name, '.json']);
-%disp('Creating UI config json file.')
-%genUiConfig(mp, ['UI_', mp.model_name, '.json']);
 
 %% Generate the Simulink model VHDL code
 
@@ -102,7 +78,7 @@ working_dir = hdlpath + "/quartus/";
 quartus_workflow_cmd = "python " + mp.codegen_path + "/autogen_quartus.py -c " + config_filepath ...
     + " -w " + working_dir + " -l " + second_cmd + " exit &";
 disp(quartus_workflow_cmd + "wtf")
-%system(quartus_workflow_cmd);
+system(quartus_workflow_cmd);
 
 % Stream the Quartus workflow log and display it to the user
 fid = fopen("autogen_quartus.log");
@@ -181,8 +157,6 @@ else
 end
 
 disp('vgen: Finished.')
-
-%cd(mp.modelPath)
 
 % reset fast simulation flag so running the model simulation isn't so slow after generating code. 
 mp.fastsim_flag = 1;
