@@ -1,9 +1,9 @@
 from math import ceil, fabs
 import collections
 
-Register = collections.namedtuple('Register', ['name', 'word_len', 'frac_len', 'signed', 'default'])
-Audio = collections.namedtuple('Audio', ['word_len', 'frac_len', 'signed', 'channel_count'])
-
+Register = collections.namedtuple('Register', ['name', 'data_type', 'default'])
+Audio = collections.namedtuple('Audio', ['data_type', 'channel_count'])
+DataType = collections.namedtuple('DataType', ['word_len', 'frac_len', 'signed'])
 
 def tab(number_of_tabs=1):
     return number_of_tabs * 2 * " "
