@@ -1,3 +1,25 @@
+#!/usr/bin/python
+
+# @file device_attributes.py
+#
+#     Python classes to represent attributes of a Linux device 
+#
+#     @author Dylan Wickham
+#     @date 2020
+#     @copyright 2020 Audio Logic
+#
+#     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+#     INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+#     PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+#     FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+#     ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#     Dylan Wickham
+#     Audio Logic
+#     985 Technology Blvd
+#     Bozeman, MT 59718
+#     openspeech@flatearthinc.com
+
 from device_drivers.device import DeviceType
 
 class DataType:
@@ -93,13 +115,13 @@ class DeviceAttribute:
         str
             Returns string representing C function prototypes
         """
-        functionString = ""
+        c_code = ""
         if(self.permissions != "0444"):
-            functionString += "static ssize_t " + self.name + \
+            c_code += "static ssize_t " + self.name + \
                              "_write (struct device *dev, struct device_attribute *attr, const char *buf, size_t count);\n"
-        functionString += "static ssize_t " + self.name + \
+        c_code += "static ssize_t " + self.name + \
                           "_read  (struct device *dev, struct device_attribute *attr, char *buf);\n"
-        return functionString
+        return c_code
     
     def create_read_func(self, device_name):
         """Create C function definition for reading the attribute value.
@@ -114,29 +136,29 @@ class DeviceAttribute:
         str
             Returns C function definition for reading the attribute value
         """
-        functionString = "static ssize_t " + self.name + "_read(struct device *dev, struct device_attribute *attr, char *buf) {\n"
-        functionString += "  fe_" + device_name + "_dev_t * devp = (fe_" + device_name + "_dev_t *)dev_get_drvdata(dev);\n"
+        c_code = "static ssize_t " + self.name + "_read(struct device *dev, struct device_attribute *attr, char *buf) {\n"
+        c_code += "  fe_" + device_name + "_dev_t * devp = (fe_" + device_name + "_dev_t *)dev_get_drvdata(dev);\n"
         if self.data_type.name == "string":
-            functionString += self._read_string()
+            c_code += self._read_string()
         else:
-            functionString += self._read_int()
-        functionString += "  return strlen(buf);\n"
-        functionString += "}\n\n"
-        return functionString
+            c_code += self._read_int()
+        c_code += "  return strlen(buf);\n"
+        c_code += "}\n\n"
+        return c_code
 
     def _read_string(self):
-        functionString = ""
-        functionString += f"  sprintf(buf, \"%s\\n\", devp->{self.name});\n"
-        return functionString
+        c_code = ""
+        c_code += f"  sprintf(buf, \"%s\\n\", devp->{self.name});\n"
+        return c_code
 
     def _read_int(self):
-        functionString = ""
-        functionString += "  fp_to_string(buf, devp->" + self.name + \
+        c_code = ""
+        c_code += "  fp_to_string(buf, devp->" + self.name + \
             ", " + str(self.data_type.fractional_bits) + ", " + \
             str(self.data_type.signed).lower()+ ", " + \
             str(self.data_type.width) + ");\n"
-        functionString += "  strcat2(buf,\"\\n\");\n"
-        return functionString
+        c_code += "  strcat2(buf,\"\\n\");\n"
+        return c_code
 
     # TODO: Implement it with writing to register for register only attributes
     def create_write_func(self, device_name):
@@ -170,10 +192,10 @@ class DeviceAttribute:
         else:
             write_func = self.name + "_write"
         
-        functionString = ("DEVICE_ATTR(" + self.name + ", " + self.permissions
+        c_code = ("DEVICE_ATTR(" + self.name + ", " + self.permissions
                             + ", " + self.name + "_read, " + write_func
                             + ");\n")
-        return functionString
+        return c_code
 class FPGADeviceAttribute(DeviceAttribute):
     def __init__ (self, name,  data_type, offset = 0, permissions = "0664"):
         super().__init__(name, data_type, permissions)
@@ -207,30 +229,30 @@ class FPGADeviceAttribute(DeviceAttribute):
         str
             Returns C function definition for writing to the attribute
         """
-        functionString = "static ssize_t " + self.name + "_write(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {\n"
-        functionString +=  "  uint32_t tempValue = 0;\n"
-        functionString += "  char substring[80];\n"
-        functionString += "  int substring_count = 0;\n"
-        functionString += "  int i;\n"
-        functionString += "  fe_" + device_name + "_dev_t *devp = (fe_" + device_name + \
+        c_code = "static ssize_t " + self.name + "_write(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {\n"
+        c_code +=  "  uint32_t tempValue = 0;\n"
+        c_code += "  char substring[80];\n"
+        c_code += "  int substring_count = 0;\n"
+        c_code += "  int i;\n"
+        c_code += "  fe_" + device_name + "_dev_t *devp = (fe_" + device_name + \
                         "_dev_t *)dev_get_drvdata(dev);\n"
-        functionString += "  for (i = 0; i < count; i++) {\n"
-        functionString += "    if ((buf[i] != ',') && (buf[i] != ' ') && (buf[i] != '\\0') && (buf[i] != '\\r') && (buf[i] != '\\n')) {\n"
-        functionString += "      substring[substring_count] = buf[i];\n"
-        functionString += "      substring_count ++;\n"
-        functionString += "    }\n"
-        functionString += "  }\n"
-        functionString += "  substring[substring_count] = 0;\n"
+        c_code += "  for (i = 0; i < count; i++) {\n"
+        c_code += "    if ((buf[i] != ',') && (buf[i] != ' ') && (buf[i] != '\\0') && (buf[i] != '\\r') && (buf[i] != '\\n')) {\n"
+        c_code += "      substring[substring_count] = buf[i];\n"
+        c_code += "      substring_count ++;\n"
+        c_code += "    }\n"
+        c_code += "  }\n"
+        c_code += "  substring[substring_count] = 0;\n"
         is_signed = str(self.data_type.signed).lower()
-        functionString += "  tempValue = set_fixed_num(substring, " + \
+        c_code += "  tempValue = set_fixed_num(substring, " + \
             str(self.data_type.fractional_bits) + ", " + is_signed + ");\n"
-        functionString += "  devp->" + self.name + " = tempValue;\n"
-        functionString += "  iowrite32(devp->" + self.name + ", (u32 *)devp->regs"
-        functionString += " + " + str(self.offset)
-        functionString += ");\n"
-        functionString += "  return count;\n"
-        functionString += "}\n\n"
-        return functionString
+        c_code += "  devp->" + self.name + " = tempValue;\n"
+        c_code += "  iowrite32(devp->" + self.name + ", (u32 *)devp->regs"
+        c_code += " + " + str(self.offset)
+        c_code += ");\n"
+        c_code += "  return count;\n"
+        c_code += "}\n\n"
+        return c_code
 
 ## Don't do commands. Add this to device attributes directly
 ## so i2c and spi attributes receive a register address rather than offset
@@ -284,42 +306,42 @@ class SPIDeviceAttribute(DeviceAttribute):
         str
             Returns C function definition for writing to the attribute
         """
-        functionString = "static ssize_t " + self.name + "_write(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {\n"
-        functionString += "  uint32_t tempValue = 0;\n"
-        functionString += "  char substring[80];\n"
-        functionString += "  int substring_count = 0;\n"
-        functionString += "  int i;\n"
-        functionString += "  char cmd[" + str(inputParams.attrWriteCommBytes) + "] = {"
+        c_code = "static ssize_t " + self.name + "_write(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {\n"
+        c_code += "  uint32_t tempValue = 0;\n"
+        c_code += "  char substring[80];\n"
+        c_code += "  int substring_count = 0;\n"
+        c_code += "  int i;\n"
+        c_code += "  char cmd[" + str(inputParams.attrWriteCommBytes) + "] = {"
         for j in range(inputParams.attrWriteCommBytes):
             # i is the index previously used to access the attribute
-            functionString += " " + inputParams.attrWriteComm[i][j]
+            c_code += " " + inputParams.attrWriteComm[i][j]
             if j != inputParams.attrWriteCommBytes - 1:
-                functionString += ","
-        functionString += "};\n"
-        functionString += "  uint8_t code = 0x00;\n"
-        functionString += "  fe_" + device_name + "_dev_t * devp = (fe_" + device_name + \
+                c_code += ","
+        c_code += "};\n"
+        c_code += "  uint8_t code = 0x00;\n"
+        c_code += "  fe_" + device_name + "_dev_t * devp = (fe_" + device_name + \
                         "_dev_t *) dev_get_drvdata(dev);\n"
-        functionString += "  for (i = 0; i < count; i++) {\n"
-        functionString += "    if ((buf[i] != ',') && (buf[i] != ' ') && (buf[i] != '\\0') && (buf[i] != '\\r') && (buf[i] != '\\n')) {\n"
-        functionString += "      substring[substring_count] = buf[i];\n"
-        functionString += "      substring_count ++;\n"
-        functionString += "    }\n"
-        functionString += "  }\n"
-        functionString += "  substring[substring_count] = '\\0';\n"
-        functionString += "  if (buf[0] == '-') {\n"
-        functionString += "    for (i = 0; i < 79; i++) {\n"
-        functionString += "      substring[i] = substring[i + 1];\n"
-        functionString += "    }\n"
-        functionString += "  }\n"
-        functionString += "  tempValue = set_fixed_num(substring, 16, true);\n"
-        functionString += "  code = find_volume_level(tempValue, 1);\n"
-        functionString += "  tempValue = decode_volume(code);\n"
-        functionString += "  devp->" + self.name + " = tempValue;\n"
-        functionString += "  cmd[" + str(inputParams.attrWriteCommBytes - 1) + "] = code;\n"
-        functionString += "  i2c_master_send(" + device_name_abbrev + "_i2c_client, &cmd[0], " + str(inputParams.attrWriteCommBytes) + ");\n"
-        functionString += "  return count;\n"
-        functionString += "}\n\n"
-        return functionString
+        c_code += "  for (i = 0; i < count; i++) {\n"
+        c_code += "    if ((buf[i] != ',') && (buf[i] != ' ') && (buf[i] != '\\0') && (buf[i] != '\\r') && (buf[i] != '\\n')) {\n"
+        c_code += "      substring[substring_count] = buf[i];\n"
+        c_code += "      substring_count ++;\n"
+        c_code += "    }\n"
+        c_code += "  }\n"
+        c_code += "  substring[substring_count] = '\\0';\n"
+        c_code += "  if (buf[0] == '-') {\n"
+        c_code += "    for (i = 0; i < 79; i++) {\n"
+        c_code += "      substring[i] = substring[i + 1];\n"
+        c_code += "    }\n"
+        c_code += "  }\n"
+        c_code += "  tempValue = set_fixed_num(substring, 16, true);\n"
+        c_code += "  code = find_volume_level(tempValue, 1);\n"
+        c_code += "  tempValue = decode_volume(code);\n"
+        c_code += "  devp->" + self.name + " = tempValue;\n"
+        c_code += "  cmd[" + str(inputParams.attrWriteCommBytes - 1) + "] = code;\n"
+        c_code += "  i2c_master_send(" + device_name_abbrev + "_i2c_client, &cmd[0], " + str(inputParams.attrWriteCommBytes) + ");\n"
+        c_code += "  return count;\n"
+        c_code += "}\n\n"
+        return c_code
 
 class I2CDeviceAttribute(DeviceAttribute):
 
@@ -354,42 +376,42 @@ class I2CDeviceAttribute(DeviceAttribute):
         str
             Returns C function definition for writing to the attribute
         """
-        functionString = "static ssize_t " + self.name + "_write(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {\n"
-        functionString +=  "  uint32_t tempValue = 0;\n"
-        functionString += "  char substring[80];\n"
-        functionString += "  int substring_count = 0;\n"
-        functionString += "  int i;\n"
-        functionString += "  char cmd[" + str(inputParams.attrWriteCommBytes) + "] = {"
+        c_code = "static ssize_t " + self.name + "_write(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {\n"
+        c_code +=  "  uint32_t tempValue = 0;\n"
+        c_code += "  char substring[80];\n"
+        c_code += "  int substring_count = 0;\n"
+        c_code += "  int i;\n"
+        c_code += "  char cmd[" + str(inputParams.attrWriteCommBytes) + "] = {"
         for j in range(inputParams.attrWriteCommBytes):
             # i is the index previously used to access the attribute
-            functionString += " " + inputParams.attrWriteComm[i][j]
+            c_code += " " + inputParams.attrWriteComm[i][j]
             if j != inputParams.attrWriteCommBytes - 1:
-                functionString += ","
-        functionString += "};\n"
-        functionString += "  uint8_t code = 0x00;\n"
-        functionString += "  fe_" + device_name + "_dev_t * devp = (fe_" + device_name + \
+                c_code += ","
+        c_code += "};\n"
+        c_code += "  uint8_t code = 0x00;\n"
+        c_code += "  fe_" + device_name + "_dev_t * devp = (fe_" + device_name + \
                         "_dev_t *) dev_get_drvdata(dev);\n"
-        functionString += "  for (i = 0; i < count; i++) {\n"
-        functionString += "    if ((buf[i] != ',') && (buf[i] != ' ') && (buf[i] != '\\0') && (buf[i] != '\\r') && (buf[i] != '\\n')) {\n"
-        functionString += "      substring[substring_count] = buf[i];\n"
-        functionString += "      substring_count ++;\n"
-        functionString += "    }\n"
-        functionString += "  }\n"
-        functionString += "  substring[substring_count] = '\\0';\n"
-        functionString += "  if (buf[0] == '-') {\n"
-        functionString += "    for (i = 0; i < 79; i++) {\n"
-        functionString += "      substring[i] = substring[i + 1];\n"
-        functionString += "    }\n"
-        functionString += "    tempValue = set_fixed_num(substring, 16, true);\n"
-        functionString += "    code = find_volume_level(tempValue, 0);\n"
-        functionString += "  } else {\n"
-        functionString += "    tempValue = set_fixed_num(substring, 16, true);\n"
-        functionString += "    code = find_volume_level(tempValue, 1);\n"
-        functionString += "  }\n"
-        functionString += "  tempValue = decode_volume(code);\n"
-        functionString += "  devp->" + self.name + " = tempValue;\n"
-        functionString += "  cmd[" + str(inputParams.attrWriteCommBytes - 1) + "] = code;\n"
-        functionString += "  i2c_master_send(" + device_name_abbrev + "_i2c_client, &cmd[0], " + str(inputParams.attrWriteCommBytes) + ");\n"
-        functionString += "  return count;\n"
-        functionString += "}\n\n"
-        return functionString
+        c_code += "  for (i = 0; i < count; i++) {\n"
+        c_code += "    if ((buf[i] != ',') && (buf[i] != ' ') && (buf[i] != '\\0') && (buf[i] != '\\r') && (buf[i] != '\\n')) {\n"
+        c_code += "      substring[substring_count] = buf[i];\n"
+        c_code += "      substring_count ++;\n"
+        c_code += "    }\n"
+        c_code += "  }\n"
+        c_code += "  substring[substring_count] = '\\0';\n"
+        c_code += "  if (buf[0] == '-') {\n"
+        c_code += "    for (i = 0; i < 79; i++) {\n"
+        c_code += "      substring[i] = substring[i + 1];\n"
+        c_code += "    }\n"
+        c_code += "    tempValue = set_fixed_num(substring, 16, true);\n"
+        c_code += "    code = find_volume_level(tempValue, 0);\n"
+        c_code += "  } else {\n"
+        c_code += "    tempValue = set_fixed_num(substring, 16, true);\n"
+        c_code += "    code = find_volume_level(tempValue, 1);\n"
+        c_code += "  }\n"
+        c_code += "  tempValue = decode_volume(code);\n"
+        c_code += "  devp->" + self.name + " = tempValue;\n"
+        c_code += "  cmd[" + str(inputParams.attrWriteCommBytes - 1) + "] = code;\n"
+        c_code += "  i2c_master_send(" + device_name_abbrev + "_i2c_client, &cmd[0], " + str(inputParams.attrWriteCommBytes) + ");\n"
+        c_code += "  return count;\n"
+        c_code += "}\n\n"
+        return c_code

@@ -1,3 +1,25 @@
+#!/usr/bin/python
+
+# @file driver_config.py
+#
+#     Python class to read and parse device driver config
+#
+#     @author Dylan Wickham
+#     @date 2020
+#     @copyright 2020 Audio Logic
+#
+#     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+#     INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+#     PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+#     FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+#     ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#     Dylan Wickham
+#     Audio Logic
+#     985 Technology Blvd
+#     Bozeman, MT 59718
+#     openspeech@flatearthinc.com
+
 import json
 from device_drivers.device import DeviceType
 from device_drivers.device_attributes import DeviceAttribute, DataType
@@ -9,7 +31,7 @@ class DriverConfig:
         """Initialize driver configuration."""
         # device specifications
         self.device_name = None
-        self.device_type = None  # 0 for spi, 1 for i2c, 2 for memory mapped device
+        self.device_type = None  
         self.device_name_abbrev = None  
         self.compatible = None  # Sets the compatible key on Linux, telling it what devices it is compatible with. Ex: "dev,fe-AD1939"
         self.device_address = None
@@ -59,19 +81,19 @@ class DriverConfig:
             Returns an instance of DriverConfig parsed from the JSON file
         """
         file = open(json_filepath, "r")
-        fileStr = file.read()
-        jsonDict = json.loads(fileStr)
-        inputStruct = DriverConfig()
+        file_str = file.read()
+        json_dict = json.loads(file_str)
+        input_struct = DriverConfig()
 
-        inputStruct.device_name = jsonDict['devices'][0]['name']
-        inputStruct.device_type = DeviceType.FPGA
-        inputStruct.device_name_abbrev = inputStruct.device_name
-        inputStruct.compatible = f'dev,{inputStruct.vendor}-{inputStruct.device_name}' 
-        attributes = jsonDict['devices'][0]['registers']
-        inputStruct.device_attributes = []
-        inputStruct.device_attributes.append(DeviceAttribute("name", DataType("string", 32), "0444"))
+        input_struct.device_name = json_dict['devices'][0]['name']
+        input_struct.device_type = DeviceType.FPGA
+        input_struct.device_name_abbrev = input_struct.device_name
+        input_struct.compatible = f'dev,{input_struct.vendor}-{input_struct.device_name}' 
+        attributes = json_dict['devices'][0]['registers']
+        input_struct.device_attributes = []
+        input_struct.device_attributes.append(DeviceAttribute("name", DataType("string", 32), "0444"))
         for attr in attributes:
-            inputStruct.device_attributes.append(DeviceAttribute.parse_json(attr, inputStruct.device_type))
-        return inputStruct
+            input_struct.device_attributes.append(DeviceAttribute.parse_json(attr, input_struct.device_type))
+        return input_struct
 
 
