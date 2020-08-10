@@ -83,6 +83,9 @@ def create_tcl_system_file(target, custom_components, sys_clock_rate_hz, templat
         out_file.write(
             f"package require -exact qsys {quartus_version}\n")
         out_file.write(f"load_system {{{target.base_qsys_file}}}\n")
+
+        # set the PLL output frequency; we divide by 1e6 because the clock
+        # frequency is specified in MHz
         out_file.write(
             f"set_instance_parameter_value pll_using_AD1939_MCLK {{gui_output_clock_frequency0}} {{{sys_clock_rate_hz/1_000_000}}}\n\n")
         out_file.write(create_component_instantiation(
