@@ -1,6 +1,5 @@
 import argparse
 
-from device_drivers import Generator as DeviceDriverGenerator, DriverConfig
 from ipcore.avalon_wrapper import main as run_avalon_wrapper_generation
 
 def main(config_dir=".", working_dir="."):

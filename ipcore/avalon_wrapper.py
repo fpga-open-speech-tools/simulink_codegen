@@ -1,6 +1,6 @@
 from math import ceil, fabs, log
 
-from .node import *
+from .vhdl_node import *
 from .util import *
 from .avalon_config import AvalonConfig
 def main(config_path="", working_dir=""):
@@ -17,9 +17,9 @@ def main(config_path="", working_dir=""):
     config = AvalonConfig.parse_json(config_path + "./model.json")
     if working_dir == "":
         working_dir = config.working_dir
-    generate_avalon_wrapper(config.registers, config.audio_in, config.audio_out, working_dir)
+    generate_avalon_wrapper(config.registers, config.audio_in, config.audio_out, config.entity_name, working_dir, config.is_sample_based)
 
-def generate_avalon_wrapper(registers, audio_in, audio_out, working_dir=""):
+def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working_dir="", is_sample_based=False):
     """Generate an Avalon wrapper for Simulink generated VHDL.
 
     Parameters
@@ -37,23 +37,23 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, working_dir=""):
     avalon_out_data_type = DataType(32, 28, True)
 
     avalon_entity_ports = [
-        Port(PortDir.In, "clk"),
-        Port(PortDir.In, "reset"),
-        Port(PortDir.In, "avalon_sink_valid"),
-        Port(PortDir.In, "avalon_sink_data", 32, "std_logic_vector", avalon_in_data_type),
-        Port(PortDir.In, "avalon_sink_channel", 2),
-        Port(PortDir.In, "avalon_sink_error", 2),
-        Port(PortDir.Out, "avalon_source_valid"),
-        Port(PortDir.Out, "avalon_source_data", 32, "std_logic_vector", avalon_out_data_type),
-        Port(PortDir.Out, "avalon_source_channel", 2),
-        Port(PortDir.Out, "avalon_source_error", 2),
-        Port(PortDir.In, "avalon_slave_address", 2),
-        Port(PortDir.In, "avalon_slave_read"),
-        Port(PortDir.Out, "avalon_slave_readdata", 32),
-        Port(PortDir.In, "avalon_slave_write"),
-        Port(PortDir.In, "avalon_slave_writedata", 32)
+        Port(PortDir.In, Signal("clk")),
+        Port(PortDir.In, Signal("reset")),
+        Port(PortDir.In, Signal("avalon_sink_valid")),
+        Port(PortDir.In, Signal("avalon_sink_data", 32, None, "std_logic_vector", avalon_in_data_type)),
+        Port(PortDir.In, Signal("avalon_sink_channel", 2)),
+        Port(PortDir.In, Signal("avalon_sink_error", 2)),
+        Port(PortDir.Out, Signal("avalon_source_valid")),
+        Port(PortDir.Out, Signal("avalon_source_data", 32, None, "std_logic_vector", avalon_out_data_type)),
+        Port(PortDir.Out, Signal("avalon_source_channel", 2)),
+        Port(PortDir.Out, Signal("avalon_source_error", 2)),
+        Port(PortDir.In, Signal("avalon_slave_address", 2)),
+        Port(PortDir.In, Signal("avalon_slave_read")),
+        Port(PortDir.Out, Signal("avalon_slave_readdata", 32)),
+        Port(PortDir.In, Signal("avalon_slave_write")),
+        Port(PortDir.In, Signal("avalon_slave_writedata", 32))
     ]
-    avalon_entity = Entity("BC_dataplane_avalon", avalon_entity_ports)
+    avalon_entity = Entity(f"{entity_name}_avalon", avalon_entity_ports)
 
     avalon_architecture = Architecture(f"{avalon_entity.name}_arch", avalon_entity)
 
@@ -64,52 +64,29 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, working_dir=""):
         "std_logic" if reg.data_type.word_len == 1 else "std_logic_vector",
         reg.data_type)
                         for reg in registers]
-    dataplane_signals = [
-        Signal(
-            "dataplane_sink_data",
-            audio_in.data_type.word_len,
-            None,
-            "std_logic_vector",
-            audio_in.data_type),
-        Signal(
-            "dataplane_source_data",
-            audio_out.data_type.word_len,
-            None,
-            "std_logic_vector",
-            audio_out.data_type
-        )
-        ]
+    dataplane_signals = create_dataplane_signals(audio_in, audio_out, is_sample_based)
     register_prefix = "register_control_"
     register_ports = [Port(
         PortDir.In,
-        register_prefix + reg.name,
-        reg.data_type.word_len,
-        "std_logic" if reg.data_type.word_len == 1 else "std_logic_vector",
-        reg.data_type)
+        Signal(
+            register_prefix + reg.name,
+            reg.data_type.word_len,
+            None,
+            "std_logic" if reg.data_type.word_len == 1 else "std_logic_vector",
+            reg.data_type)
+        )
                       for reg in registers]
 
-    dataplane = Component("BC_dataplane", register_ports + [
-        Port(PortDir.In, "clk"),
-        Port(PortDir.In, "reset"),
-        Port(PortDir.In, "clk_enable"),
-        Port(PortDir.In, "avalon_sink_valid"),
-        Port(PortDir.In, "avalon_sink_data", audio_in.data_type.word_len, "std_logic_vector", audio_in.data_type),
-        Port(PortDir.In, "avalon_sink_channel", 2),
-        Port(PortDir.In, "avalon_sink_error", 2),
-        Port(PortDir.Out, "ce_out"),
-        Port(PortDir.Out, "avalon_source_valid"),
-        Port(PortDir.Out, "avalon_source_data", audio_out.data_type.word_len, "std_logic_vector", audio_out.data_type),
-        Port(PortDir.Out, "avalon_source_channel", 2),
-        Port(PortDir.Out, "avalon_source_error", 2),
-    ])
+    dataplane = create_dataplane_component(audio_in, audio_out, register_ports, entity_name, is_sample_based)
 
     avalon_architecture.components = [dataplane]
     avalon_architecture.signals = register_signals + dataplane_signals
 
-    avalon_architecture.signal_assignments = {
-        avalon_architecture.get_signal("dataplane_sink_data") : avalon_entity.get_port("avalon_sink_data"),
-        avalon_entity.get_port("avalon_source_data") : avalon_architecture.get_signal("dataplane_source_data")
-    }
+    if not is_sample_based:
+        avalon_architecture.signal_assignments = {
+            avalon_architecture.get_signal("dataplane_sink_data") : avalon_entity.get_port("avalon_sink_data"),
+            avalon_entity.get_port("avalon_source_data") : avalon_architecture.get_signal("dataplane_source_data")
+        }
 
     # Create PortMap
     ## {Port, Signal}
@@ -133,26 +110,74 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, working_dir=""):
 
     dataplane.port_map = PortMap(f"u_{dataplane.name}", port_map, dataplane)
 
-    bus_read = Process("bus_read")
-    bus_read.sensitivity_list = [avalon_entity.get_port("clk")]
-    bus_read.logic = create_bus_read_logic(register_signals, avalon_entity.get_port("avalon_slave_readdata"))
-
-    bus_write = Process("bus_write")
-    bus_write.sensitivity_list = avalon_entity.get_ports("clk", "reset")
-    bus_write.logic = create_bus_write_logic(register_signals, avalon_entity.get_port("avalon_slave_writedata"))
-
-    avalon_architecture.processes = [bus_read, bus_write]
+    avalon_architecture.processes = create_processes(register_signals, dataplane_signals, avalon_entity, is_sample_based)
 
     libraries = [
         Library("ieee", [
             "std_logic_1164",
             "numeric_std"
         ]),
-        Library("work", ["fixed_resize_pkg"])
+        Library("work", [
+            "fixed_resize_pkg",
+            f"{entity_name}_pkg"
+            ])
     ]
 
     avalon_wrapper = EntityFile(avalon_entity.name, avalon_entity, avalon_architecture, libraries)
     avalon_wrapper.write(working_dir)
+
+def create_dataplane_component(audio_in, audio_out, register_ports, entity_name, is_sample_based):
+    if is_sample_based:
+        sink_vhdl_type = f"vector_of_std_logic_vector{audio_in.data_type.word_len}"
+        source_vhdl_type = f"vector_of_std_logic_vector{audio_out.data_type.word_len}"
+        avalon_sink_data_port = Port(PortDir.In, ArraySignal("avalon_sink_data", sink_vhdl_type, audio_in.channel_count, "std_logic_vector", audio_in.data_type.word_len, audio_in.data_type))
+        avalon_source_data_port = Port(PortDir.Out, ArraySignal("avalon_source_data", source_vhdl_type, audio_out.channel_count, "std_logic_vector", audio_out.data_type.word_len, audio_out.data_type))
+    else:
+        avalon_sink_data_port = Port(PortDir.In, Signal("avalon_sink_data", audio_in.data_type.word_len, None, "std_logic_vector", audio_in.data_type))
+        avalon_source_data_port = Port(PortDir.Out, Signal("avalon_source_data", audio_out.data_type.word_len, None, "std_logic_vector", audio_out.data_type))
+
+    return Component(entity_name, register_ports + [
+        Port(PortDir.In, Signal("clk")),
+        Port(PortDir.In, Signal("reset")),
+        Port(PortDir.In, Signal("clk_enable")),
+        Port(PortDir.In, Signal("avalon_sink_valid")),
+        avalon_sink_data_port,
+        Port(PortDir.In, Signal("avalon_sink_channel", 2)),
+        Port(PortDir.In, Signal("avalon_sink_error", 2)),
+        Port(PortDir.Out, Signal("ce_out")),
+        Port(PortDir.Out, Signal("avalon_source_valid")),
+        avalon_source_data_port,
+        Port(PortDir.Out, Signal("avalon_source_channel", 2)),
+        Port(PortDir.Out, Signal("avalon_source_error", 2)),
+    ])
+
+def create_processes(register_signals, dataplane_signals, avalon_entity, isSampleBased=False):
+    processes = []
+    if isSampleBased:
+        channel_to_sample_p = Process("channel_to_sample")
+        channel_to_sample_p.sensitivity_list = [avalon_entity.get_port("clk")]
+        sink_data = next(port for port in dataplane_signals if port.name == "dataplane_sink_data")
+        sink_data_tmp = next(port for port in dataplane_signals if port.name == "dataplane_sink_data_tmp")
+        channel_to_sample_p.logic = channel_to_sample(avalon_entity.get_port("avalon_sink_data"), sink_data_tmp, sink_data)
+        processes.append(channel_to_sample_p)
+
+        sample_to_channel_p = Process("sample_to_channel")
+        sample_to_channel_p.sensitivity_list = [avalon_entity.get_port("clk")]
+        dataplane_source_data = next(port for port in dataplane_signals if port.name == "dataplane_source_data")
+        sample_to_channel_p.logic = sample_to_channel(avalon_entity.get_port("avalon_source_data"), dataplane_source_data)
+        processes.append(sample_to_channel_p)
+
+    bus_read = Process("bus_read")
+    bus_read.sensitivity_list = [avalon_entity.get_port("clk")]
+    bus_read.logic = create_bus_read_logic(register_signals, avalon_entity.get_port("avalon_slave_readdata"))
+    processes.append(bus_read)
+
+    bus_write = Process("bus_write")
+    bus_write.sensitivity_list = avalon_entity.get_ports("clk", "reset")
+    bus_write.logic = create_bus_write_logic(register_signals, avalon_entity.get_port("avalon_slave_writedata"))
+    processes.append(bus_write)
+
+    return processes
 
 def create_bus_read_logic(register_signals, avalon_slave_readdata_signal):
     """Create VHDL logic to read register data from dataplane.
@@ -229,3 +254,95 @@ def create_bus_write_logic(register_signals, avalon_slave_writedata_signal):
     logic_string += tab(2) + "end case;\n"
     logic_string += tab() +  "end if;\n"
     return logic_string
+
+def create_dataplane_signals(audio_in, audio_out, isSampleBased):
+    if not isSampleBased:
+        return [
+            Signal(
+                "dataplane_sink_data",
+                audio_in.data_type.word_len,
+                None,
+                "std_logic_vector",
+                audio_in.data_type),
+            Signal(
+                "dataplane_source_data",
+                audio_out.data_type.word_len,
+                None,
+                "std_logic_vector",
+                audio_out.data_type
+            )
+            ]
+    return [
+        ArraySignal(
+            "dataplane_sink_data",
+            f"vector_of_std_logic_vector{audio_in.data_type.word_len}",
+            audio_in.channel_count,
+            "std_logic_vector",
+            audio_in.data_type.word_len,
+            audio_in.data_type
+        ),
+        ArraySignal(
+            "dataplane_sink_data_tmp",
+            f"vector_of_std_logic_vector{audio_in.data_type.word_len}",
+            audio_in.channel_count,
+            "std_logic_vector",
+            audio_in.data_type.word_len,
+            audio_in.data_type
+        ),
+        ArraySignal(
+            "dataplane_source_data",
+            f"vector_of_std_logic_vector{audio_out.data_type.word_len}",
+            audio_out.channel_count,
+            "std_logic_vector",
+            audio_out.data_type.word_len,
+            audio_out.data_type
+        ),
+        ArraySignal(
+            "dataplane_source_data_prev",
+            f"vector_of_std_logic_vector{audio_out.data_type.word_len}",
+            audio_out.channel_count,
+            "std_logic_vector",
+            audio_out.data_type.word_len,
+            audio_out.data_type
+        ),
+        Signal("counter", 1, 0, "natural")
+
+    ]
+    
+def channel_to_sample(avalon_sink_data_signal, dataplane_sink_data_tmp_signal, dataplane_sink_data_signal):
+    return f"""
+    if rising_edge(clk) then
+        if avalon_sink_valid = '1' then
+            if avalon_sink_channel = "00" then
+            {dataplane_sink_data_tmp_signal[0].generate_assignment(avalon_sink_data_signal)}
+            elsif avalon_sink_channel = "01" then
+                {dataplane_sink_data_tmp_signal[0].generate_assignment(avalon_sink_data_signal)}
+                {dataplane_sink_data_signal.generate_assignment(dataplane_sink_data_tmp_signal)}
+            end if;
+        end if;
+    end if; 
+"""
+def sample_to_channel(avalon_source_data_signal, dataplane_source_data_signal):
+    vhdl = tab() + "if rising_edge(clk) then\n"
+
+    vhdl += tab(2) + "if counter = 2048 then\n"
+    vhdl += tab(3) + "counter <= 1;\n"
+
+    vhdl += tab(2) + "else\n"
+
+    vhdl += tab(3) + "if counter = 1 then\n"
+    vhdl += tab(4) + avalon_source_data_signal.generate_assignment(dataplane_source_data_signal[0])
+    vhdl += tab(4) + "avalon_source_valid <= '1';\n"
+    vhdl += tab(4) + "avalon_source_channel<= \"00\";\n"
+
+    vhdl += tab(3) + "elsif counter = 2 then\n"
+    vhdl += tab(4) + avalon_source_data_signal.generate_assignment(dataplane_source_data_signal[1])
+    vhdl += tab(4) + "avalon_source_valid <= '1';\n"
+    vhdl += tab(4) + "avalon_source_channel <= \"01\";\n"
+
+    vhdl += tab(3) + "end if;\n"
+    vhdl += tab(3) + "counter <= counter + 1;\n"
+    vhdl += tab(2) + "end if;\n"
+
+    vhdl += tab() + "end if;\n"
+    return vhdl

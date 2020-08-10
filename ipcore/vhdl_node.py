@@ -145,7 +145,7 @@ class Signal(BaseVHDLNode):
                 right_hand_side = f"std_logic_vector(resize({conversion}({new_signal_value.name}), {self.length}))"
             else:
                 raise ValueError("Assigning signals of different length requires they either both or neither have underlying data types.\n"
-                                 f"Attemped assigning {new_signal_value.name} to {self.name}")
+                                 f"Attemped assigning {new_signal_value.name} ({new_signal_value.length}) to {self.name} ({self.length})")
         elif self.underlying_data_type == new_data_type:
             right_hand_side = new_signal_value.name
         else:
@@ -182,23 +182,57 @@ class LiteralSignal(Signal):
         else:
             name = f"\"{value}\""
         super().__init__(name, len(value), value)
-class Port(Signal):
-    def __init__(self, direction, name, length=1, data_type=None, underlying_data_type=None):
-        super().__init__(name, length, None, data_type, underlying_data_type)
+class Port(BaseVHDLNode):
+    def __init__(self, direction, signal):
+        super().__init__(signal.name)
         self.direction = direction
+        self.signal = signal
     def generate(self):
         """Generate a VHDL port."""
-        if self.length == 1:
-            type_declaration = self.data_type
+        if self.signal.length == 1:
+            type_declaration = self.signal.data_type
         else:
-            type_declaration = f"{self.data_type}({(self.length - 1)} downto 0)"
+            type_declaration = f"{self.signal.data_type}({(self.signal.length - 1)} downto 0)"
         return f"{self.name.ljust(32)} : {self.direction.value} {type_declaration}"
+    @property
+    def length(self):
+        return self.signal.length
+    @property
+    def data_type(self):
+        return self.signal.data_type
+    @property
+    def underlying_data_type(self):
+        return self.signal.underlying_data_type
+    def generate_assignment(self, new_signal_value):
+        """Generate VHDL assignment to this port, including necessary resizing.
+
+        Resizes using underlying data type if possible.
+        VHDL data types must match except for std_logic and std_logic_vector.
+        For assignmnents between std_logic and std_logic_vector,
+        the first bit is where data is assumed to be stored.
+
+        Parameters
+        ----------
+        new_signal_value : Signal
+            signal being assigned to this. VHDL data types must match except for std_logic and std_logic_vector
+
+        Returns
+        -------
+        str
+            VHDL code to assign new_signal_value to this port
+        """
+        return self.signal.generate_assignment(new_signal_value)
 
 class PortDir(Enum):
     In = "in "
     Out = "out"
 
-
+class ArraySignal(Signal):
+    def __init__(self, name, vhdl_type, length, element_type, element_length, element_data_type=None):
+        super().__init__(name, length, None, vhdl_type)
+        self.signals = [Signal(f"{self.name}({i})", element_length, None, element_type, element_data_type) for i in range(length)]
+    def __getitem__(self, key):
+        return self.signals[key]
 class Entity(BaseVHDLNode):
     def __init__(self, name, ports):
         super().__init__(name)
@@ -276,7 +310,8 @@ class PortMap(BaseVHDLNode):
         if signal is None:
             return "open"
         if port.length != signal.length:
-            raise ValueError("Port assignments must be of equal length\n" + f"Attempted assigning {signal.name} to {port.name}")
+            raise ValueError("Port assignments must be of equal length\n"
+                + f"Attempted assigning {signal.name} ({signal.length}) to {port.name}({port.length})")
         return signal.name
         
 
@@ -334,5 +369,5 @@ class Process(BaseVHDLNode):
         vhdl = f"{self.name} : process({', '.join(sensitivity_list_str) })\n"
         vhdl += "begin\n"
         vhdl += self.logic
-        vhdl += "end process;\n"
+        vhdl += "end process;\n\n"
         return vhdl
