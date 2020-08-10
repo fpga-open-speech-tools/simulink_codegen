@@ -24,8 +24,7 @@ def create_component_instantiation(custom_components, template):
     string
         Component instantiation section of tcl file
     """
-    built_string = template.add_created_by_function_header(
-        create_component_instantiation)
+    built_string = ""
     for custom_component in custom_components:
         built_string += template.add_custom_component_instantiaion(
             custom_component)
@@ -49,7 +48,7 @@ def create_connections(target, custom_components, template):
     string
         Connections section of tcl file
     """
-    built_string = template.add_created_by_function_header(create_connections)
+    built_string = ""
     for custom_component in custom_components:
         built_string += template.add_custom_component_connections(
             custom_component, target)
@@ -84,8 +83,11 @@ def create_tcl_system_file(target, custom_components, sys_clock_rate_hz, templat
         out_file.write(
             f"package require -exact qsys {quartus_version}\n")
         out_file.write(f"load_system {{{target.base_qsys_file}}}\n")
+
+        # set the PLL output frequency; we divide by 1e6 because the clock
+        # frequency is specified in MHz
         out_file.write(
-            f"set_instance_parameter_value pll_using_AD1939_MCLK {{gui_output_clock_frequency0}} {{{sys_clock_rate_hz/1_000_000}}}")
+            f"set_instance_parameter_value pll_using_AD1939_MCLK {{gui_output_clock_frequency0}} {{{sys_clock_rate_hz/1_000_000}}}\n\n")
         out_file.write(create_component_instantiation(
             custom_components, template))
         out_file.write(create_connections(target, custom_components, template))

@@ -23,6 +23,7 @@ custom_component_instantiation_template = "add_instance component_name_0 compone
 quartus_project_template = """
 set project project_name
 set revision project_revision
+set target_system target_name
 load_package flow
 
 project_new $project -revision ${revision} -overwrite
@@ -149,7 +150,7 @@ class QuartusTemplates:
             tcl file that describes the project
         """
         files = self.add_files_list(target.files_list)
-        return quartus_project_template.replace("project_name", proj_name).replace("project_revision", project_revision).replace("files_list", files)
+        return quartus_project_template.replace("project_name", proj_name).replace("project_revision", project_revision).replace("files_list", files).replace("target_name", target.name)
 
     def add_quartus_compile_project(self, project_name, project_revision):
         """Generate a tcl file that can be run to compile the given Quartus project.

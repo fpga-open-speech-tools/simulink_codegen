@@ -31,11 +31,10 @@ class WorkflowConfig:
             in_str = file.read()
             json_dict = json.loads(in_str)
             config = WorkflowConfig()
-
-            config.clock_rate = json_dict.get('clocks') and json_dict.get('clocks')[
-                'system_frequency_Hz']
-            config.target_system = json_dict.get("target_system")
-            config.custom_components = json_dict.get("custom_components") or [
-                json_dict.get('model_name')] or []
-            config.working_dir = json_dict.get("working_dir")
+            config.clock_rate = json_dict['system']['systemClockFrequency']
+            config.target_system = json_dict['system']['target']
+            devices = json_dict['devices']
+            config.custom_components = []
+            for device in devices:
+                config.custom_components.append(device['name'])
         return config
