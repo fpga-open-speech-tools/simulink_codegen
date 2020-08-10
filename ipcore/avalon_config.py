@@ -6,13 +6,15 @@ from .util import Register, Audio, DataType
 class AvalonConfig:
     """Describe configuration to generate avalon wrapper."""
 
-    def __init__(self, target, audio_in, audio_out, registers=None, working_dir=""):
+    def __init__(self, target, audio_in, audio_out, entity_name, registers=None, working_dir="", is_sample_based=False):
         """Initialize an empty configuration."""
         self.registers = registers or []
         self.target_system = target
         self.working_dir = working_dir
         self.audio_in = audio_in
         self.audio_out = audio_out
+        self.entity_name = entity_name
+        self.is_sample_based = is_sample_based
 
     @staticmethod
     def parse_json(config_filepath):
@@ -63,4 +65,6 @@ class AvalonConfig:
                     reg["dataType"]["signed"]),
                 reg["defaultValue"]
                 ))
-        return AvalonConfig(target, audio_in, audio_out, registers, working_dir)
+        entity_name = modeljson['devices'][0]["name"] + "_dataplane"
+        is_sample_based = modeljson['system']['processing'].lower() == "sample"
+        return AvalonConfig(target, audio_in, audio_out, entity_name, registers, working_dir, is_sample_based)
