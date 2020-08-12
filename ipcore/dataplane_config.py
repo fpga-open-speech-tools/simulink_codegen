@@ -129,16 +129,16 @@ class DataplaneConfig:
                 {
                     "name": "avalon_sink_data",
                     "data_type": {
-                        "width": model.system.audioOut.wordLength,
+                        "width": 32,
                         "type": "sfix32_En28",
                         "signed": model.system.audioOut.signed,
-                        "fractional_bits": model.system.audioOut.fractionLength
+                        "fractional_bits": 28
                     }
                 }, 
                 {
                     "name": "avalon_sink_channel",
                     "data_type": {
-                        "width": 4,
+                        "width": 2,
                         "type": "ufix4",
                         "signed": False,
                         "fractional_bits": 0
@@ -169,16 +169,16 @@ class DataplaneConfig:
                 {
                     "name": "avalon_source_data",
                     "data_type": {
-                        "width": model.system.audioOut.wordLength,
+                        "width": 32,
                         "type": "sfix32_En28",
                         "signed": model.system.audioOut.signed,
-                        "fractional_bits": model.system.audioOut.fractionLength
+                        "fractional_bits": 28
                     }
                 },
                 {
                     "name": "avalon_source_channel",
                     "data_type": {
-                        "width": 1,
+                        "width": 2,
                         "type": "ufix1",
                         "signed": False,
                         "fractional_bits": 0
