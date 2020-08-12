@@ -43,21 +43,27 @@ package body fixed_resize_pkg is
     constant INT_BITS : Natural := (old_word_len - old_frac_len - 1);
     constant NEW_INT_BITS : Natural := (new_word_len - new_frac_len - 1);
     constant USE_FRAC_BITS : Natural := min(old_frac_len, new_frac_len);
-    variable int_result : signed(INT_BITS - 1 downto 0);
-    variable new_frac : signed(new_frac_len - 1 downto 0);
+    variable int_result : signed(NEW_INT_BITS downto 0); -- Contains sign bit and integer portion
+    variable new_frac : std_logic_vector(new_frac_len - 1 downto 0);
   begin
-    -- Resize integer portion
-    int_result := resize(arg(old_word_len - 2 downto (old_word_len - INT_BITS - 2)), NEW_INT_BITS);
+    -- Resize sign + integer portion
+    int_result := resize(arg(old_word_len - 1 downto (old_word_len - INT_BITS - 1)), NEW_INT_BITS + 1);
     -- Initialize fraction portion with sign bit
     new_frac := (others => SIGN);
     
     -- If there are any fractional bits in new fixed point number
     if new_frac'length >= 2 then
       -- Set upper bits of fraction portion to the number of bits that should be used from the original
-      new_frac(new_frac'length - 2 downto new_frac'length - 1 - USE_FRAC_BITS) := arg(old_frac_len - 1 downto old_frac_len - USE_FRAC_BITS);
+      new_frac(new_frac'length - 1 downto new_frac'length - USE_FRAC_BITS) := std_logic_vector(arg(old_frac_len - 1 downto old_frac_len - USE_FRAC_BITS));
     end if;
-    -- 
-    result := int_result & new_frac(new_frac'length downto 0);
+     
+    if new_frac_len = 0 then
+      result := int_result;
+    else
+      -- Because int_result contains sign bit, it always exists
+      result := signed(std_logic_vector(int_result) & new_frac);
+    end if;
+    
     return result;
   end resize_fixed;
 
@@ -68,21 +74,26 @@ package body fixed_resize_pkg is
     new_word_len: Natural; 
     new_frac_len: Natural) 
   return unsigned is
-    variable result: unsigned(new_word_len-1 downto 0) := (others => '0');
-    constant SIGN: std_ulogic := arg(arg'left);
+    variable result: unsigned(new_word_len-1 downto 0) := (others => '0');0
     constant INT_BITS : Natural := (old_word_len - old_frac_len);
     constant NEW_INT_BITS : Natural := (new_word_len - new_frac_len);
     constant USE_FRAC_BITS : Natural := min(old_frac_len, new_frac_len);
-    variable int_result : unsigned(INT_BITS - 1 downto 0);
+    variable int_result : unsigned(NEW_INT_BITS - 1 downto 0);
     variable new_frac : unsigned(arg'left - INT_BITS - 1 downto 0);
   begin
-    int_result := resize(arg(old_word_len - 1 downto (old_word_len - INT_BITS - 1)), NEW_INT_BITS);
-    new_frac := (others => SIGN);
+    int_result := resize(arg(old_word_len - 1 downto (old_word_len - INT_BITS)), NEW_INT_BITS);
+    new_frac := (others => 0);
     if new_frac'length >= 1 then
       new_frac(new_frac'length - 1 downto new_frac'length - USE_FRAC_BITS) := arg(old_frac_len - 1 downto old_frac_len - USE_FRAC_BITS);
+      if INT_BITS = 0 then
+        result := new_frac;
+      else
+        result := int_result & new_frac(new_frac'length downto 0);
+      end if;
+    else
+      result := int_result;
     end if;
 
-    result := int_result & new_frac(new_frac'length - 1 downto 0);
     return result;
   end resize_fixed;
 

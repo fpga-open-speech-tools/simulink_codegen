@@ -1,12 +1,15 @@
-from math import ceil, fabs
+from math import fabs
 import collections
 
 Register = collections.namedtuple('Register', ['name', 'data_type', 'default'])
 Audio = collections.namedtuple('Audio', ['data_type', 'channel_count'])
-DataType = collections.namedtuple('DataType', ['word_len', 'frac_len', 'signed'])
+DataType = collections.namedtuple(
+    'DataType', ['word_len', 'frac_len', 'signed'])
+
 
 def tab(number_of_tabs=1):
     return number_of_tabs * 2 * " "
+
 
 def num_to_bitstring(value, tot_bits, frac_bits):
     # make value positive, then take the two's complement later if value is supposed to be negative

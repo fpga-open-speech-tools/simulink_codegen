@@ -3,6 +3,7 @@ from pathlib import Path
 
 from .util import Register, Audio, DataType
 
+
 class AvalonConfig:
     """Describe configuration to generate avalon wrapper."""
 
@@ -64,7 +65,7 @@ class AvalonConfig:
                     reg["dataType"]["fractionLength"],
                     reg["dataType"]["signed"]),
                 reg["defaultValue"]
-                ))
+            ))
         entity_name = modeljson['devices'][0]["name"] + "_dataplane"
         is_sample_based = modeljson['system']['processing'].lower() == "sample"
         return AvalonConfig(target, audio_in, audio_out, entity_name, registers, working_dir, is_sample_based)
