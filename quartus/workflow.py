@@ -251,7 +251,7 @@ def gen_project_tcl(project_name, project_revision, target, template, working_di
 
 
 def gen_pll_qsys(working_dir):
-    """Generate the phase locked loop component needed for the arria10 configuration.
+    """Generate the phase locked loop component needed for the audioblade configuration.
 
     Parameters
     ----------
@@ -259,7 +259,7 @@ def gen_pll_qsys(working_dir):
         Working directory of the generation process
     """
     pll_file = "pll.qsys"
-    copyfile(RES_DIR + "/res/" + pll_file, working_dir + pll_file)
+    copyfile(RES_DIR + pll_file, working_dir + pll_file)
     log_msg = "Generating pll"
     cmd = f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {pll_file}'
     log_file_path = working_dir + "pll_gen.log"
@@ -304,7 +304,7 @@ def gen_project(project_name, project_revision, target, template, working_dir):
     """
     gen_project_tcl(project_name, project_revision,
                     target, template, working_dir)
-    if(target.name == "arria10"):
+    if(target.name == "audioblade"):
         gen_pll_qsys(working_dir)
 
     log_msg = "Generating project"

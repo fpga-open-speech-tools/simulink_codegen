@@ -70,7 +70,7 @@ def parseargs():
     parser = argparse.ArgumentParser(
         description="Executes the quartus workflow, from creating a system to compiling the project made around that system")
     parser.add_argument('-c', '--config',
-                        help="Config file containing autogen configuration in JSON format")
+                        help="Config filepath containing autogen configuration in JSON format")
     parser.add_argument('-w', '--working-dir',
                         help="Working directory to execute the quartus workflow in")
     parser.add_argument('-l', '--logging', required=False, action="store_true",

@@ -1,5 +1,5 @@
 %% Load the Model
-model = mp.modelAbbreviation;
+model = mp.modelName;
 dataplane_name = 'dataplane';
 
 %% Model HDL Parameters
