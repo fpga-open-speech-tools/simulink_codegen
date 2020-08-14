@@ -32,8 +32,7 @@ class AvalonConfig:
             Parsed configuration
         """
         with open(config_filepath, "r") as file:
-            in_str = file.read()
-        modeljson = json.loads(in_str)
+            modeljson = json.load(file)
 
         working_dir = Path(config_filepath).parent.name
         target = modeljson["system"]["target"]
@@ -42,7 +41,8 @@ class AvalonConfig:
             DataType(
                 json_audio_in["wordLength"],
                 json_audio_in["fractionLength"],
-                json_audio_in["signed"]),
+                json_audio_in["signed"]
+                ),
             json_audio_in["numberOfChannels"]
         )
 
@@ -51,7 +51,8 @@ class AvalonConfig:
             DataType(
                 json_audio_out["wordLength"],
                 json_audio_out["fractionLength"],
-                json_audio_out["signed"]),
+                json_audio_out["signed"]
+                ),
             json_audio_out["numberOfChannels"]
         )
 
@@ -63,7 +64,8 @@ class AvalonConfig:
                 DataType(
                     reg["dataType"]["wordLength"],
                     reg["dataType"]["fractionLength"],
-                    reg["dataType"]["signed"]),
+                    reg["dataType"]["signed"]
+                    ),
                 reg["defaultValue"]
             ))
         entity_name = modeljson['devices'][0]["name"] + "_dataplane"

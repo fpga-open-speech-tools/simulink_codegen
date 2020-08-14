@@ -139,6 +139,7 @@ class Signal(BaseVHDLNode):
             else:
                 right_hand_side = f"{new_signal_value.name}(0)"
         elif new_signal_value.length == 1:
+            # No sign extension needed since length 1 is inherently unsigned
             right_hand_side = f"(0 => {new_signal_value.name}, others => '0')"
         else:
             right_hand_side = self._get_right_hand_side_vector_value(
@@ -183,11 +184,8 @@ class Signal(BaseVHDLNode):
         if (not isinstance(self.default_value, str)) and self.underlying_data_type is not None:
             word_len = self.underlying_data_type.word_len
             frac_len = self.underlying_data_type.frac_len
-            if word_len == 1:
-                default_bit_string = f"'{self.default_value}'"
-            else:
-                default_bit_string = num_to_bitstring(
-                    self.default_value, word_len, frac_len)
+            default_bit_string = num_to_bitstring(
+                self.default_value, word_len, frac_len)
             return default_bit_string
         return str(self.default_value)
 

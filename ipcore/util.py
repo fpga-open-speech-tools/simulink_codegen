@@ -12,6 +12,9 @@ def tab(number_of_tabs=1):
 
 
 def num_to_bitstring(value, tot_bits, frac_bits):
+    if tot_bits == 1:
+        return f"'{value}'"
+
     # make value positive, then take the two's complement later if value is supposed to be negative
     is_negative = value < 0
     value = fabs(value)
