@@ -74,7 +74,7 @@ package body fixed_resize_pkg is
     new_word_len: Natural; 
     new_frac_len: Natural) 
   return unsigned is
-    variable result: unsigned(new_word_len-1 downto 0) := (others => '0');0
+    variable result: unsigned(new_word_len-1 downto 0) := (others => '0');
     constant INT_BITS : Natural := (old_word_len - old_frac_len);
     constant NEW_INT_BITS : Natural := (new_word_len - new_frac_len);
     constant USE_FRAC_BITS : Natural := min(old_frac_len, new_frac_len);
@@ -82,7 +82,7 @@ package body fixed_resize_pkg is
     variable new_frac : unsigned(arg'left - INT_BITS - 1 downto 0);
   begin
     int_result := resize(arg(old_word_len - 1 downto (old_word_len - INT_BITS)), NEW_INT_BITS);
-    new_frac := (others => 0);
+    new_frac := (others => '0');
     if new_frac'length >= 1 then
       new_frac(new_frac'length - 1 downto new_frac'length - USE_FRAC_BITS) := arg(old_frac_len - 1 downto old_frac_len - USE_FRAC_BITS);
       if INT_BITS = 0 then
