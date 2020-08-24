@@ -9,6 +9,6 @@
     <!--      https://www.altera.com/documentation/zcn1513987282935.html#mwh1409958678312                                                          -->
     <path path="../../../../../../component_library/**/*" />
     <path path="../../../component_library/**/*" />
-    <path path="../*" />
+    <path path="../**/*" />
     <!-- <path path="../../simulink_models/**/*" /> -->
 </library>
