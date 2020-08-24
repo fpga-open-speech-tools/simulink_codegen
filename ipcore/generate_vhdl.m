@@ -2,6 +2,10 @@
 model = mp.modelName;
 dataplane_name = 'dataplane';
 
+sampleTimes = Simulink.BlockDiagram.getSampleTimes(mp.modelAbbreviation);
+mp.base_rate = 1/sampleTimes(1).Value(1);
+oversampling_factor = mp.Fs_system/mp.base_rate;
+
 %% Model HDL Parameters
 hdlset_param(model, ...
     'DateComment', 'off', ...
@@ -23,7 +27,7 @@ hdlset_param(model, ...
     'UseRisingEdge', 'on', ...
     'TargetDirectory', 'hdlsrc', ...
     'TargetFrequency', mp.Fs_system / 1000000, ... % TargetFrequency is in MHz
-    'Oversampling', mp.rate_change, ...
+    'Oversampling', oversampling_factor, ...
     'HierarchicalDistPipelining', 'on', ...
     'MulticyclePathConstraints', 'off', ...
     'ClockRatePipelining', 'on');
@@ -69,6 +73,10 @@ hWC.ShowEndsOnly = false;
 
 % Validate the Workflow Configuration Object
 hWC.validate;
+
+if exist('hdlworkflow.m', 'file')
+    hdlworkflow;
+end
 
 %% Run the workflow
 hdlcoder.runWorkflow([model '/' dataplane_name], hWC);
