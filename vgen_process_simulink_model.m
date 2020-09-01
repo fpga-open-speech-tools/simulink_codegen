@@ -116,8 +116,8 @@ target = lower(char(mp.target));
 project_revision = mp.modelName + "_" + target;
 sopcinfo_file = hdlpath + "/quartus/" + target + '_system.sopcinfo';
 disp("Generating device tree source file")
-disp(python + mp.dtogen_path + filesep + "dtogen -s " + sopcinfo_file + " -r " + project_revision + " -o " + hdlpath)
-system(python + mp.dtogen_path + filesep + "dtogen -s " + sopcinfo_file + " -r " + project_revision + " -o " + hdlpath);
+disp(python + mp.dtogen_path + filesep + "generate.py -s " + sopcinfo_file + " -r " + project_revision + " -o " + hdlpath)
+system(python + mp.dtogen_path + filesep + "generate.py -s " + sopcinfo_file + " -r " + project_revision + " -o " + hdlpath);
 
 disp("Compiling device tree source file")
 
