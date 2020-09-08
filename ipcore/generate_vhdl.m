@@ -2,9 +2,13 @@
 model = mp.modelName;
 dataplane_name = 'dataplane';
 
+%% Calculate oversampling factor from sample time
+orig_sim_mode = get_param(model, 'SimulationMode')
+set_param(model,'SimulationMode','normal')
 sampleTimes = Simulink.BlockDiagram.getSampleTimes(mp.modelAbbreviation);
 mp.base_rate = 1/sampleTimes(1).Value(1);
 oversampling_factor = mp.Fs_system/mp.base_rate;
+set_param(model,'SimulationMode', orig_sim_mode)
 
 %% Model HDL Parameters
 hdlset_param(model, ...
