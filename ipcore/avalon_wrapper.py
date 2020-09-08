@@ -44,6 +44,8 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
     avalon_out_data_type = AD1939_DATA_TYPE
 
     addr_width = int(ceil(log(len(registers), 2)))
+    channel_in_width = int(ceil(log(audio_in.channel_count, 2)))
+    channel_out_width = int(ceil(log(audio_out.channel_count, 2)))
 
     avalon_entity_ports = [
         Port(PortDir.In, Signal("clk")),
@@ -51,12 +53,12 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
         Port(PortDir.In, Signal("avalon_sink_valid")),
         Port(PortDir.In, Signal("avalon_sink_data", 32,
                                 None, "std_logic_vector", avalon_in_data_type)),
-        Port(PortDir.In, Signal("avalon_sink_channel", 2)),
+        Port(PortDir.In, Signal("avalon_sink_channel", channel_in_width)),
         Port(PortDir.In, Signal("avalon_sink_error", 2)),
         Port(PortDir.Out, Signal("avalon_source_valid")),
         Port(PortDir.Out, Signal("avalon_source_data", 32,
                                  None, "std_logic_vector", avalon_out_data_type)),
-        Port(PortDir.Out, Signal("avalon_source_channel", 2)),
+        Port(PortDir.Out, Signal("avalon_source_channel", channel_out_width)),
         Port(PortDir.Out, Signal("avalon_source_error", 2)),
         Port(PortDir.In, Signal("avalon_slave_address",
                                 addr_width, None, "std_logic_vector")),
@@ -147,18 +149,20 @@ def create_dataplane_component(audio_in, audio_out, register_ports, entity_name,
             )
         ]
     else:
+        channel_in_width = int(ceil(log(audio_in.channel_count, 2)))
+        channel_out_width = int(ceil(log(audio_out.channel_count, 2)))
         avalon_sink = [
             Port(PortDir.In, Signal("avalon_sink_valid")),
             Port(PortDir.In, Signal("avalon_sink_data", audio_in.data_type.word_len,
                                     None, "std_logic_vector", audio_in.data_type)),
-            Port(PortDir.In, Signal("avalon_sink_channel", 2)),
+            Port(PortDir.In, Signal("avalon_sink_channel", channel_in_width)),
             Port(PortDir.In, Signal("avalon_sink_error", 2)),
         ]
         avalon_source = [
             Port(PortDir.Out, Signal("avalon_source_valid")),
             Port(PortDir.Out, Signal("avalon_source_data", audio_out.data_type.word_len,
                                      None, "std_logic_vector", audio_out.data_type)),
-            Port(PortDir.Out, Signal("avalon_source_channel", 2)),
+            Port(PortDir.Out, Signal("avalon_source_channel", channel_out_width)),
             Port(PortDir.Out, Signal("avalon_source_error", 2)),
         ]
     return Component(entity_name, register_ports + [
