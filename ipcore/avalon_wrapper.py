@@ -44,6 +44,8 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
     avalon_out_data_type = AD1939_DATA_TYPE
 
     addr_width = int(ceil(log(len(registers), 2)))
+    if addr_width == 0 and len(registers) == 1:
+        addr_width = 1
     channel_in_width = int(ceil(log(audio_in.channel_count, 2)))
     channel_out_width = int(ceil(log(audio_out.channel_count, 2)))
 
@@ -53,12 +55,12 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
         Port(PortDir.In, Signal("avalon_sink_valid")),
         Port(PortDir.In, Signal("avalon_sink_data", 32,
                                 None, "std_logic_vector", avalon_in_data_type)),
-        Port(PortDir.In, Signal("avalon_sink_channel", channel_in_width)),
+        Port(PortDir.In, Signal("avalon_sink_channel", channel_in_width, None, "std_logic_vector")),
         Port(PortDir.In, Signal("avalon_sink_error", 2)),
         Port(PortDir.Out, Signal("avalon_source_valid")),
         Port(PortDir.Out, Signal("avalon_source_data", 32,
                                  None, "std_logic_vector", avalon_out_data_type)),
-        Port(PortDir.Out, Signal("avalon_source_channel", channel_out_width)),
+        Port(PortDir.Out, Signal("avalon_source_channel", channel_out_width, None, "std_logic_vector")),
         Port(PortDir.Out, Signal("avalon_source_error", 2)),
         Port(PortDir.In, Signal("avalon_slave_address",
                                 addr_width, None, "std_logic_vector")),
@@ -155,14 +157,14 @@ def create_dataplane_component(audio_in, audio_out, register_ports, entity_name,
             Port(PortDir.In, Signal("avalon_sink_valid")),
             Port(PortDir.In, Signal("avalon_sink_data", audio_in.data_type.word_len,
                                     None, "std_logic_vector", audio_in.data_type)),
-            Port(PortDir.In, Signal("avalon_sink_channel", channel_in_width)),
+            Port(PortDir.In, Signal("avalon_sink_channel", channel_in_width, None, "std_logic_vector")),
             Port(PortDir.In, Signal("avalon_sink_error", 2)),
         ]
         avalon_source = [
             Port(PortDir.Out, Signal("avalon_source_valid")),
             Port(PortDir.Out, Signal("avalon_source_data", audio_out.data_type.word_len,
                                      None, "std_logic_vector", audio_out.data_type)),
-            Port(PortDir.Out, Signal("avalon_source_channel", channel_out_width)),
+            Port(PortDir.Out, Signal("avalon_source_channel", channel_out_width, None, "std_logic_vector")),
             Port(PortDir.Out, Signal("avalon_source_error", 2)),
         ]
     return Component(entity_name, register_ports + [
@@ -381,10 +383,10 @@ def channel_to_sample(avalon_sink_data_signal, dataplane_sink_data_tmp_signal, d
     return f"""
     if rising_edge(clk) then
         if avalon_sink_valid = '1' then
-            if avalon_sink_channel = "00" then
+            if avalon_sink_channel = "0" then
             {dataplane_sink_data_tmp_signal[0].generate_assignment(avalon_sink_data_signal)}
-            elsif avalon_sink_channel = "01" then
-                {dataplane_sink_data_tmp_signal[0].generate_assignment(avalon_sink_data_signal)}
+            elsif avalon_sink_channel = "1" then
+                {dataplane_sink_data_tmp_signal[1].generate_assignment(avalon_sink_data_signal)}
                 {dataplane_sink_data_signal.generate_assignment(dataplane_sink_data_tmp_signal)}
             end if;
         end if;
@@ -404,13 +406,13 @@ def sample_to_channel(avalon_source_data_signal, dataplane_source_data_signal):
     vhdl += tab(4) + avalon_source_data_signal.generate_assignment(
         dataplane_source_data_signal[0])
     vhdl += tab(4) + "avalon_source_valid <= '1';\n"
-    vhdl += tab(4) + "avalon_source_channel<= \"00\";\n"
+    vhdl += tab(4) + "avalon_source_channel<= \"0\";\n"
 
     vhdl += tab(3) + "elsif counter = 2 then\n"
     vhdl += tab(4) + avalon_source_data_signal.generate_assignment(
         dataplane_source_data_signal[1])
     vhdl += tab(4) + "avalon_source_valid <= '1';\n"
-    vhdl += tab(4) + "avalon_source_channel <= \"01\";\n"
+    vhdl += tab(4) + "avalon_source_channel <= \"1\";\n"
 
     vhdl += tab(3) + "end if;\n"
     vhdl += tab(3) + "counter <= counter + 1;\n"
