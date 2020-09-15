@@ -47,9 +47,14 @@ disp(['      created vhdl file: ' outfile])
 disp('vgen: Creating .tcl script for Platform Designer.')
 % NOTE: platform designer only adds components if they have the _hw.tcl suffix
 outfile = [hdlpath filesep mp.modelName '_dataplane_avalon_hw.tcl'];
-disp(['file ' config_filepath ' out ' outfile ' path ' hdlpath])
-disp(python + mp.ipcore_codegen_path + filesep + "create_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile )
-system(python + mp.ipcore_codegen_path + filesep + "create_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile );
+% disp(['file ' config_filepath ' out ' outfile ' path ' hdlpath])
+% disp(python + mp.ipcore_codegen_path + filesep + "create_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile )
+% system(python + mp.ipcore_codegen_path + filesep + "create_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile );
+
+hw_tcl_cmd = python + mp.codegen_path + filesep + "autogen_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile;
+system(hw_tcl_cmd);
+disp(hw_tcl_cmd)
+
 disp(['      created tcl file: ' outfile])
 
 disp('vgen: Executing Quartus workflow')
