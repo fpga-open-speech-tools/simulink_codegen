@@ -39,7 +39,6 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
     working_dir : str, optional
         Directory to output avalon wrapper to, by default "" which is the current directory
     """
-
     avalon_in_data_type = AD1939_DATA_TYPE
     avalon_out_data_type = AD1939_DATA_TYPE
 
