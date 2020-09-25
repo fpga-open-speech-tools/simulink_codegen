@@ -59,7 +59,7 @@ def create_makefile(path):
     # by convention, all of our repositories get cloned into the same 
     # root folder; this relative paths reflect that setup, so as long
     # the convention is followed, this path will work
-    KERNEL_SOURCE_PATH = '../../../../../linux-socfpga'
+    KERNEL_SOURCE_PATH = '~/linux-socfpga'
 
     output = 'KDIR ?= ' + KERNEL_SOURCE_PATH + '\n'
     output += 'default:\n'
