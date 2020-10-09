@@ -63,7 +63,7 @@ def create_makefile(path):
 
     output = 'KDIR ?= ' + KERNEL_SOURCE_PATH + '\n'
     output += 'default:\n'
-    output += '\t$(MAKE) -C $(KDIR) ARCH=arm M=$(CURDIR)\n'
+    output += '\t$(MAKE) -C $(KDIR) ARCH=arm M=$(CURDIR) CROSS_COMPILE=arm-linux-gnueabihf-\n'
     output += 'clean:\n'
     output += '\t$(MAKE) -C $(KDIR) ARCH=arm M=$(CURDIR) clean\n'
     output += 'help:\n'

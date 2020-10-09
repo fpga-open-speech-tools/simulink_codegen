@@ -12,7 +12,7 @@ custom_component_initial_audio_in_connection_template = '''
 add_connection audio_in component_name_0.avalon_streaming_sink
 '''
 custom_component_audio_in_connection_template = '''
-add_connection last_component_name.avalon_streaming_source component_name_0.avalon_streaming_sink
+add_connection last_component_name_0.avalon_streaming_source component_name_0.avalon_streaming_sink
 '''
 custom_component_final_audio_out_connection_template = '''
 add_connection component_name_0.avalon_streaming_source audio_out
@@ -26,7 +26,12 @@ set revision project_revision
 set target_system target_name
 load_package flow
 
-project_new $project -revision ${revision} -overwrite
+if [project_exists $project] {
+    project_open $project
+    create_revision $revision
+} else {
+    project_new $project -revision ${revision} -overwrite
+}
 
 source ${target_system}_proj.tcl
 
@@ -43,7 +48,7 @@ project_close
 quartus_compile_template = """
 load_package flow
 
-project_open -revision project_revision project_name
+project_open -force -revision project_revision project_name
 
 # compile the project
 execute_flow -compile
@@ -55,7 +60,7 @@ project_close
 class QuartusTemplates:
     """Generate templates for Quartus workflow."""
 
-    def __init__(self, num_custom_components, baseAddress):
+    def __init__(self, num_custom_components, baseAddress=20):
         """Initialize QuartusTemplates.
 
         Parameters
@@ -67,7 +72,7 @@ class QuartusTemplates:
         """
         self.custom_components_added = 0
         self.num_custom_components = num_custom_components
-        self.de10_components_base_address = 20  # Format is 0x0020
+        self.de10_components_base_address = baseAddress  # Format is 0x0020
         self.last_component_added = ""
 
     def add_custom_component_instantiaion(self, component_name):
@@ -118,14 +123,14 @@ class QuartusTemplates:
         if(self.custom_components_added == 0):
             built_string += custom_component_initial_audio_in_connection_template.replace(
                 "component_name", component_name).replace("audio_in", target.audio_in)
+        else:
+            built_string += custom_component_audio_in_connection_template.replace(
+            "last_component_name", self.last_component_added).replace("component_name", component_name)
         if((self.custom_components_added + 1) == self.num_custom_components):
             built_string += custom_component_final_audio_out_connection_template.replace(
                 "component_name", component_name).replace("audio_out", target.audio_out)
             self.custom_components_added = 0
             return built_string
-
-        built_string += custom_component_audio_in_connection_template.replace(
-            "component_name", component_name).replace("last_component_name", self.last_component_added)
 
         self.last_component_added = component_name
         self.custom_components_added += 1
@@ -150,7 +155,12 @@ class QuartusTemplates:
             tcl file that describes the project
         """
         files = self.add_files_list(target.files_list)
-        return quartus_project_template.replace("project_name", proj_name).replace("project_revision", project_revision).replace("files_list", files).replace("target_name", target.name)
+        quartus_project = quartus_project_template.replace("project_name", proj_name).replace(
+            "project_revision", project_revision).replace("files_list", files).replace("target_name", target.name)
+
+        if(target.name == "reflex"):
+            quartus_project.replace("rbf", "jic")
+        return quartus_project
 
     def add_quartus_compile_project(self, project_name, project_revision):
         """Generate a tcl file that can be run to compile the given Quartus project.

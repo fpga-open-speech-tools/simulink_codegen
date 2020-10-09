@@ -1,4 +1,4 @@
-
+from math import ceil, log
 
 class HwTCLGenerator:
     def __init__(self, dataplane_config):
@@ -204,7 +204,7 @@ class HwTCLGenerator:
         tcl += "set_interface_property " + sink + " SVD_ADDRESS_GROUP \"\"\n"
         tcl += "add_interface_port " + sink + " avalon_sink_valid valid Input 1\n"
         tcl += "add_interface_port " + sink + " avalon_sink_data data Input 32\n"
-        tcl += f"add_interface_port {sink} avalon_sink_channel channel Input {self.sink_max_channel}\n"
+        tcl += f"add_interface_port {sink} avalon_sink_channel channel Input {int(ceil(log(self.sink_max_channel + 1, 2)))}\n"
         tcl += "add_interface_port " + sink + " avalon_sink_error error Input 2\n"
         tcl += "\n\n\n"
         return tcl
@@ -233,7 +233,7 @@ class HwTCLGenerator:
 
         tcl += "add_interface_port " + source + " avalon_source_valid valid Output 1\n"
         tcl += "add_interface_port " + source + " avalon_source_data data Output 32\n"
-        tcl += f"add_interface_port {source} avalon_source_channel channel Output {self.source_max_channel}\n"
+        tcl += f"add_interface_port {source} avalon_source_channel channel Output {int(ceil(log(self.source_max_channel + 1, 2)))}\n"
         tcl += "add_interface_port " + source + " avalon_source_error error Output 2\n"
         tcl += "\n\n\n"
         return tcl
