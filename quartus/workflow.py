@@ -6,7 +6,7 @@ import re
 import logging
 from shutil import copyfile
 from quartus.quartus_templates import QuartusTemplates
-from quartus.target import Audiomini, Audioblade, Target
+from quartus.target import Audiomini, Reflex, Target
 
 
 def create_component_instantiation(custom_components, template):
@@ -164,6 +164,8 @@ def gen_qsys_file_from_tcl(tcl_file, working_dir):
         Working directory of the generation process
     """
     # TODO: Updates search path from being a hardcoded (relative) path
+    ipx_file = "components.ipx"
+    copyfile(RES_DIR + ipx_file, working_dir + ipx_file)
 
     cmd = f'cd {working_dir} && ' + QSYS_BIN_DIR + 'qsys-script ' + \
         f'--script={tcl_file} ' + \
@@ -189,9 +191,6 @@ def gen_qsys_system(target, custom_components, sys_clock_rate_hz, template, work
     working_dir : string
         Working directory of the generation process
     """
-    ipx_file = "components.ipx"
-    copyfile(RES_DIR + ipx_file, working_dir + ipx_file)
-
     system_exists = os.path.isfile(working_dir + target.system_name + ".qsys")
     if not(system_exists):
         gen_qsys_file(target, custom_components,
@@ -247,9 +246,14 @@ def gen_project_tcl(project_name, project_revision, target, template, working_di
             for line in orig_top_file:
                 new_top_file.write(line.replace(
                     original_system, target.system_name))
+    copy_additional_project_files(target, working_dir)
     copyfile(RES_DIR + "gen_rbf.tcl", working_dir + "gen_rbf.tcl")
 
-
+def copy_additional_project_files(target, working_dir):
+    for file in target.files_list:
+        if not(os.path.isfile(working_dir + file)) and os.path.isfile(RES_DIR + file):
+            os.makedirs(os.path.dirname(working_dir + file), exist_ok=True)
+            copyfile(RES_DIR + file, working_dir + file)
 def gen_pll_qsys(working_dir):
     """Generate the phase locked loop component needed for the audioblade configuration.
 
@@ -258,7 +262,7 @@ def gen_pll_qsys(working_dir):
     working_dir : string
         Working directory of the generation process
     """
-    pll_file = "pll.qsys"
+    pll_file = "pll_sys.qsys"
     copyfile(RES_DIR + pll_file, working_dir + pll_file)
     log_msg = "Generating pll"
     cmd = f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {pll_file}'
@@ -304,7 +308,7 @@ def gen_project(project_name, project_revision, target, template, working_dir):
     """
     gen_project_tcl(project_name, project_revision,
                     target, template, working_dir)
-    if(target.name == "audioblade"):
+    if(target == Reflex):
         gen_pll_qsys(working_dir)
 
     log_msg = "Generating project"
@@ -381,8 +385,8 @@ def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz
 
     if(target_system == "audiomini"):
         target = Audiomini
-    elif(target_system == "audioblade"):
-        target = Audioblade
+    elif(target_system == "reflex"):
+        target = Reflex
     else:
         raise ValueError(
             f"The provided target: {target_system} is not supported")

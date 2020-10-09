@@ -41,8 +41,10 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
     """
     avalon_in_data_type = AD1939_DATA_TYPE
     avalon_out_data_type = AD1939_DATA_TYPE
-
-    addr_width = int(ceil(log(len(registers), 2)))
+    if len(registers) == 0:
+        addr_width = 0
+    else:
+        addr_width = int(ceil(log(len(registers), 2)))
     if addr_width == 0 and len(registers) == 1:
         addr_width = 1
     channel_in_width = int(ceil(log(audio_in.channel_count, 2)))
@@ -113,7 +115,7 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
         dataplane, avalon_entity, registers, register_signals, avalon_architecture, is_sample_based)
 
     avalon_architecture.processes = create_processes(
-        register_signals, dataplane_signals, avalon_entity, is_sample_based)
+        register_signals, dataplane_signals, avalon_entity, audio_in, audio_out, is_sample_based)
 
     libraries = [
         Library("ieee", [
@@ -207,7 +209,7 @@ def create_dataplane_port_map(dataplane, entity, registers, register_signals, ar
     return PortMap(f"u_{dataplane.name}", port_map, dataplane)
 
 
-def create_processes(register_signals, dataplane_signals, avalon_entity, isSampleBased=False):
+def create_processes(register_signals, dataplane_signals, avalon_entity, audio_in, audio_out, isSampleBased=False):
     processes = []
     if isSampleBased:
         channel_to_sample_p = Process("channel_to_sample")
@@ -217,7 +219,7 @@ def create_processes(register_signals, dataplane_signals, avalon_entity, isSampl
         sink_data_tmp = next(
             port for port in dataplane_signals if port.name == "dataplane_sink_data_tmp")
         channel_to_sample_p.logic = channel_to_sample(
-            avalon_entity.get_port("avalon_sink_data"), sink_data_tmp, sink_data)
+            avalon_entity.get_port("avalon_sink_data"), sink_data_tmp, sink_data, audio_in.channel_count)
         processes.append(channel_to_sample_p)
 
         sample_to_channel_p = Process("sample_to_channel")
@@ -225,7 +227,7 @@ def create_processes(register_signals, dataplane_signals, avalon_entity, isSampl
         dataplane_source_data = next(
             port for port in dataplane_signals if port.name == "dataplane_source_data")
         sample_to_channel_p.logic = sample_to_channel(
-            avalon_entity.get_port("avalon_source_data"), dataplane_source_data)
+            avalon_entity.get_port("avalon_source_data"), dataplane_source_data, audio_out.channel_count)
         processes.append(sample_to_channel_p)
 
     bus_read = Process("bus_read")
@@ -317,7 +319,7 @@ def create_bus_write_logic(register_signals, avalon_slave_writedata_signal):
         addr = "{0:0{1}b}".format(idx, addr_width)
         assignment = reg.generate_assignment(data_in)
         logic_string += tab(3) + f"when \"{addr}\" => {assignment}"
-    logic_string += tab(3) + "when others => null;"
+    logic_string += tab(3) + "when others => null;\n"
     logic_string += tab(2) + "end case;\n"
     logic_string += tab() + "end if;\n"
     return logic_string
@@ -373,27 +375,39 @@ def create_dataplane_signals(audio_in, audio_out, isSampleBased):
             audio_out.data_type.word_len,
             audio_out.data_type
         ),
-        Signal("counter", 1, 0, "natural")
-
+        Signal("counter", 1, 0, "natural"),
+        Signal("sample_valid", 1, 0, "std_logic", DataType(1, 0, 0))
     ]
 
 
-def channel_to_sample(avalon_sink_data_signal, dataplane_sink_data_tmp_signal, dataplane_sink_data_signal):
+def channel_to_sample(avalon_sink_data_signal, dataplane_sink_data_tmp_signal, dataplane_sink_data_signal, channel_count):
+    channel_in_width = int(ceil(log(channel_count, 2)))
+    when_statements = ""
+    for channel in range(channel_count):
+        when_statements += \
+f"""
+                when {num_to_bitstring(channel, channel_in_width, 0, '"')} =>
+                    {dataplane_sink_data_tmp_signal[channel].generate_assignment(avalon_sink_data_signal)}"""
+    when_statements += \
+f"""
+                    sample_valid <= '1';
+                when others => null;"""
     return f"""
     if rising_edge(clk) then
         if avalon_sink_valid = '1' then
-            if avalon_sink_channel = "0" then
-            {dataplane_sink_data_tmp_signal[0].generate_assignment(avalon_sink_data_signal)}
-            elsif avalon_sink_channel = "1" then
-                {dataplane_sink_data_tmp_signal[1].generate_assignment(avalon_sink_data_signal)}
-                {dataplane_sink_data_signal.generate_assignment(dataplane_sink_data_tmp_signal)}
-            end if;
+            case avalon_sink_channel is
+{when_statements}
+            end case;
+        elsif sample_valid = '1' then
+            {dataplane_sink_data_signal.generate_assignment(dataplane_sink_data_tmp_signal)}
+            sample_valid <= '0';
         end if;
     end if; 
 """
 
 
-def sample_to_channel(avalon_source_data_signal, dataplane_source_data_signal):
+def sample_to_channel(avalon_source_data_signal, dataplane_source_data_signal, channel_count):
+    channel_width = int(ceil(log(channel_count, 2)))
     vhdl = tab() + "if rising_edge(clk) then\n"
 
     vhdl += tab(2) + "if counter = 2048 then\n"
@@ -401,19 +415,18 @@ def sample_to_channel(avalon_source_data_signal, dataplane_source_data_signal):
 
     vhdl += tab(2) + "else\n"
 
-    vhdl += tab(3) + "if counter = 1 then\n"
-    vhdl += tab(4) + avalon_source_data_signal.generate_assignment(
-        dataplane_source_data_signal[0])
-    vhdl += tab(4) + "avalon_source_valid <= '1';\n"
-    vhdl += tab(4) + "avalon_source_channel<= \"0\";\n"
+    vhdl += tab(3) + "case counter is\n"
+    for channel in range(channel_count):
+        vhdl += tab(4) + f"when {1 + channel} =>\n"
+        vhdl += tab(5) + avalon_source_data_signal.generate_assignment(
+            dataplane_source_data_signal[channel])
+        vhdl += tab(5) + "avalon_source_valid <= '1';\n"
+        surround_with = "\""
+        vhdl += tab(5) + f"avalon_source_channel <= {num_to_bitstring(channel, channel_width, 0, surround_with)};\n"
 
-    vhdl += tab(3) + "elsif counter = 2 then\n"
-    vhdl += tab(4) + avalon_source_data_signal.generate_assignment(
-        dataplane_source_data_signal[1])
-    vhdl += tab(4) + "avalon_source_valid <= '1';\n"
-    vhdl += tab(4) + "avalon_source_channel <= \"1\";\n"
-
-    vhdl += tab(3) + "end if;\n"
+    vhdl += tab(4) + "when others =>\n"
+    vhdl += tab(5) + "avalon_source_valid <= '0';\n"
+    vhdl += tab(3) + "end case;\n"
     vhdl += tab(3) + "counter <= counter + 1;\n"
     vhdl += tab(2) + "end if;\n"
 

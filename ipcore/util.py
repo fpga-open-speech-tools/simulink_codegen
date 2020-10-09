@@ -11,8 +11,24 @@ def tab(number_of_tabs=1):
     return number_of_tabs * 2 * " "
 
 
-def num_to_bitstring(value, tot_bits, frac_bits):
-    if tot_bits == 1:
+def num_to_bitstring(value, tot_bits, frac_bits, surround_with=None):
+    """Convert number to a fixed point binary string.
+
+    Parameters
+    ----------
+    value : int
+        Number to be converted
+    tot_bits : int
+        Total bits in the converted string
+    frac_bits : int
+        Number of fractional bits in the fixed point binary string
+
+    Returns
+    -------
+    str
+        Fixed point binary string representing value
+    """
+    if tot_bits == 1 and surround_with is None:
         return f"'{value}'"
 
     # make value positive, then take the two's complement later if value is supposed to be negative
@@ -39,6 +55,10 @@ def num_to_bitstring(value, tot_bits, frac_bits):
         bitstring = bitstring.rjust(tot_bits, "0")
 
     # wrap the string in quotes
-    bitstring = '"{0}"'.format(bitstring)
+    bitstring = '{0}'.format(bitstring)
+    if surround_with is None:
+        bitstring = f"\"{bitstring}\""
+    else:
+        bitstring = f"{surround_with}{bitstring}{surround_with}"
 
     return bitstring

@@ -20,7 +20,7 @@
 }
 ]]></parameter>
  <parameter name="clockCrossingAdapter" value="HANDSHAKE" />
- <parameter name="device" value="10AS066H2F34I1HG" />
+ <parameter name="device" value="10AS066H2F34I1SG" />
  <parameter name="deviceFamily" value="Arria 10" />
  <parameter name="deviceSpeedGrade" value="1" />
  <parameter name="fabricMode" value="QSYS" />
@@ -44,12 +44,12 @@
  <interface name="outclk0" internal="iopll_0.outclk0" type="clock" dir="start">
   <port name="outclk_0" internal="outclk_0" />
  </interface>
- <interface name="outclk1" internal="iopll_0.outclk1" type="clock" dir="start">
-  <port name="outclk_1" internal="outclk_1" />
- </interface>
- <interface name="outclk2" internal="iopll_0.outclk2" type="clock" dir="start">
-  <port name="outclk_2" internal="outclk_2" />
- </interface>
+ <interface name="outclk1" internal="iopll_0.outclk1" />
+ <interface name="outclk2" internal="iopll_0.outclk2" />
+ <interface name="outclk3" internal="iopll_0.outclk3" />
+ <interface name="outclk4" internal="iopll_0.outclk4" />
+ <interface name="outclk5" internal="iopll_0.outclk5" />
+ <interface name="outclk6" internal="iopll_0.outclk6" />
  <interface name="refclk" internal="iopll_0.refclk" type="clock" dir="end">
   <port name="refclk" internal="refclk" />
  </interface>
@@ -59,7 +59,7 @@
  <module
    name="iopll_0"
    kind="altera_iopll"
-   version="19.1"
+   version="18.0"
    enabled="1"
    autoexport="1">
   <parameter name="gui_active_clk" value="false" />
@@ -181,10 +181,10 @@
   <parameter name="gui_mif_gen_options">Generate New MIF File</parameter>
   <parameter name="gui_multiply_factor" value="6" />
   <parameter name="gui_new_mif_file_path" value="~/pll.mif" />
-  <parameter name="gui_number_of_clocks" value="3" />
+  <parameter name="gui_number_of_clocks" value="1" />
   <parameter name="gui_operation_mode" value="direct" />
   <parameter name="gui_output_clock_frequency0" value="100.0" />
-  <parameter name="gui_output_clock_frequency1" value="26.66" />
+  <parameter name="gui_output_clock_frequency1" value="100.0" />
   <parameter name="gui_output_clock_frequency10" value="100.0" />
   <parameter name="gui_output_clock_frequency11" value="100.0" />
   <parameter name="gui_output_clock_frequency12" value="100.0" />
@@ -193,7 +193,7 @@
   <parameter name="gui_output_clock_frequency15" value="100.0" />
   <parameter name="gui_output_clock_frequency16" value="100.0" />
   <parameter name="gui_output_clock_frequency17" value="100.0" />
-  <parameter name="gui_output_clock_frequency2" value="20.0" />
+  <parameter name="gui_output_clock_frequency2" value="100.0" />
   <parameter name="gui_output_clock_frequency3" value="100.0" />
   <parameter name="gui_output_clock_frequency4" value="100.0" />
   <parameter name="gui_output_clock_frequency5" value="100.0" />
@@ -234,7 +234,7 @@
   <parameter name="gui_phase_shift_deg3" value="0.0" />
   <parameter name="gui_phase_shift_deg4" value="0.0" />
   <parameter name="gui_phase_shift_deg5" value="0.0" />
-  <parameter name="gui_phase_shift_deg6" value="0.0" />
+  <parameter name="gui_phase_shift_deg6" value="90.0" />
   <parameter name="gui_phase_shift_deg7" value="0.0" />
   <parameter name="gui_phase_shift_deg8" value="0.0" />
   <parameter name="gui_phase_shift_deg9" value="0.0" />
@@ -266,7 +266,7 @@
   <parameter name="gui_ps_units3" value="ps" />
   <parameter name="gui_ps_units4" value="ps" />
   <parameter name="gui_ps_units5" value="ps" />
-  <parameter name="gui_ps_units6" value="ps" />
+  <parameter name="gui_ps_units6" value="degrees" />
   <parameter name="gui_ps_units7" value="ps" />
   <parameter name="gui_ps_units8" value="ps" />
   <parameter name="gui_ps_units9" value="ps" />
@@ -280,13 +280,12 @@
   <parameter name="gui_usr_device_speed_grade" value="1" />
   <parameter name="gui_vco_frequency" value="600.0" />
   <parameter name="hp_qsys_scripting_mode" value="false" />
-  <parameter name="system_info_device_component" value="10AS066H2F34I1HG" />
+  <parameter name="system_info_device_component" value="10AS066H2F34I1SG" />
   <parameter name="system_info_device_family" value="Arria 10" />
   <parameter name="system_info_device_speed_grade" value="1" />
   <parameter name="system_part_trait_speed_grade" value="1" />
  </module>
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
- <interconnectRequirement for="$system" name="qsys_mm.enableEccProtection" value="FALSE" />
  <interconnectRequirement for="$system" name="qsys_mm.insertDefaultSlave" value="FALSE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
 </system>
