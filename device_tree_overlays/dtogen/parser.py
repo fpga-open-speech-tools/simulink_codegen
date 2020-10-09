@@ -3,8 +3,8 @@ import xml.etree.ElementTree as ET
 
 from .node import *
 
-def parser(sopc_file):
-    """Parses device tree nodes from the given file
+def parse(sopc_file):
+    """Parse device tree nodes from the given file.
 
     Parameters
     ----------
@@ -29,14 +29,14 @@ def parser(sopc_file):
     return [BridgeRootNode(bridges_root.attrib["name"], bridges_root.attrib["name"], children=bridge_nodes)]
 
 def parse_autogen_nodes(root, bridges):
-    """Parses the Autogen nodes under the bridges from the sopcinfo file
+    """Parse the Autogen nodes under the bridges from the sopcinfo file.
 
     Parameters
     ----------
     root : Element
         Root element of the sopcinfo file
     bridges : dict
-        Dictionary containing bridge indices and internal links from the bridge 
+        Dictionary containing bridge indices and internal links from the bridge
         name the sl nodes are attached to and the actual bridges
 
     Returns
@@ -55,19 +55,19 @@ def parse_autogen_nodes(root, bridges):
         address_span_bits = node.findtext('./interface[@name="avalon_slave"]/parameter[@name="addressSpan"]/value')
         avalon_connection = root.find('./connection[@kind="avalon"][endModule="' + node.attrib["name"] + '"]')
 
-        baseAddress = avalon_connection.findtext('./parameter[@name="baseAddress"]/value')
+        base_address = avalon_connection.findtext('./parameter[@name="baseAddress"]/value')
         
         bridge = avalon_connection.findtext('./startConnectionPoint')
         link = bridges[bridge]
         bridge_info = bridges[link]
         
-        nodes.append(MemoryMappedSlaveNode(label = node.attrib["name"], name= node.attrib["kind"], base_addr=int(baseAddress, 0), \
+        nodes.append(MemoryMappedSlaveNode(label=node.attrib["name"], name=node.attrib["kind"], base_addr=int(base_address, 0), \
             span=int(address_span_bits), index=bridge_info[0], compatible=compatible\
             ))
     return nodes
 
 def parse_bridges(root, bridges_root):
-    """Parses the bridges found under the root bridges node 
+    """Parse the bridges found under the root bridges node.
 
     Parameters
     ----------
@@ -89,15 +89,18 @@ def parse_bridges(root, bridges_root):
     for bridge in bridges_xml:
         span = bridge.findtext("./assignment[name='addressSpan']/value")
 
-        if(span != None):         
-            memoryblock = root.find(f".//memoryBlock[moduleName='{bridges_root.attrib['name']}'][slaveName='{bridge.attrib['name']}']")
-            base = memoryblock.findtext('baseAddress')
-            
-            bridge_link = bridge.attrib["name"].split("_", 1)[1]
-            bridges[bridge_link] = bridge.attrib["name"]
-            bridges[bridge.attrib["name"]] = [bridge_counter, base]
-            
-            bridge_nodes.append(MemoryBridgeNode(bridge.attrib["name"], base_addr=int(base), span=int(span), index=bridge_counter, label=bridge.attrib["name"]))
-            bridge_counter += 1
+        if span is None:
+            continue
+        memoryblock = root.find(f".//memoryBlock[moduleName='{bridges_root.attrib['name']}'][slaveName='{bridge.attrib['name']}']")
+        if memoryblock is None:
+            continue
+        base = memoryblock.findtext('baseAddress')
+        
+        bridge_link = bridge.attrib["name"].split("_", 1)[1]
+        bridges[bridge_link] = bridge.attrib["name"]
+        bridges[bridge.attrib["name"]] = [bridge_counter, base]
+        
+        bridge_nodes.append(MemoryBridgeNode(bridge.attrib["name"], base_addr=int(base), span=int(span), index=bridge_counter, label=bridge.attrib["name"]))
+        bridge_counter += 1
 
     return (bridge_nodes, bridges)

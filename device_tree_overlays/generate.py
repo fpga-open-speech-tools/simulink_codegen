@@ -1,7 +1,7 @@
 import argparse
 import pathlib
 
-from dtogen.parser import parser
+from dtogen.parser import parse
 from dtogen.node import FpgaRegionNode, DeviceTreeRootNode
 
 def generate_device_tree_overlay(sopcinfo_file, rbf_file, output_dir=""):
@@ -21,7 +21,7 @@ def generate_device_tree_overlay(sopcinfo_file, rbf_file, output_dir=""):
     rbf_file = str(pathlib.Path(rbf_file).with_suffix(".rbf"))
     dts_file = pathlib.Path(rbf_file).with_suffix(".dts")
 
-    nodes = parser(sopcinfo_file)
+    nodes = parse(sopcinfo_file)
     fpga_region_node = FpgaRegionNode(
         "base_fpga_region", rbf_file, "base_fpga_region", nodes)
     dtroot = DeviceTreeRootNode([fpga_region_node])

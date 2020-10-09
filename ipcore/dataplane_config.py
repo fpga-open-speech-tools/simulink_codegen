@@ -40,10 +40,8 @@ class DataplaneConfig:
             config.address_bus_size = int(
                 ceil(log(len(model.devices[deviceIndex].registers))))
 
-        config.sink_max_channel = int(
-            ceil(log(model.system.audioIn.numberOfChannels, 2)))
-        config.source_max_channel = int(
-            ceil(log(model.system.audioOut.numberOfChannels, 2)))
+        config.sink_max_channel = model.system.audioIn.numberOfChannels - 1
+        config.source_max_channel = model.system.audioOut.numberOfChannels - 1
         return config
 
 
