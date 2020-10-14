@@ -193,7 +193,8 @@ class FpgaRegionNode(Node):
     def _print_properties(self):
         s = ''
         s += super()._print_properties()
-        s += self.add_tab() + 'firmware-name = "{}";\n'.format(self.firmware_name)
+        if self.firmware_name is not None:
+            s += self.add_tab() + 'firmware-name = "{}";\n'.format(self.firmware_name)
         #if self.status is not None:
         #    s += self.add_tab() + 'status = "{}";\n'.format(self.status)
 
