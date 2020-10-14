@@ -6,7 +6,7 @@ import re
 import logging
 from shutil import copyfile
 from quartus.quartus_templates import QuartusTemplates
-from quartus.target import Audiomini, Reflex, Target
+from quartus.target import Audiomini, Reflex, Target, Audioblade
 
 
 def create_component_instantiation(custom_components, template):
@@ -195,24 +195,7 @@ def gen_qsys_system(target, custom_components, sys_clock_rate_hz, template, work
     if not(system_exists):
         gen_qsys_file(target, custom_components,
                       sys_clock_rate_hz, template, working_dir)
-    gen_qsys_system_from_qsys_file(target.system_name, working_dir)
-
-
-def gen_qsys_system_from_qsys_file(system_name, working_dir):
-    """Generate the qsys file using qsys-generate.
-
-    Parameters
-    ----------
-    system_name : string
-        Name of the system to generate
-    working_dir : string
-        Working directory of the generation process
-    """
-    cmd = f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {system_name}.qsys'
-    log_file_path = working_dir + "qsys_gen.log"
-    log_msg = "Generating system"
-    run_cmd_and_log(cmd, log_msg, log_file_path)
-
+    gen_qsys_system_from_qsys_file(target.system_name + ".qsys", working_dir)
 
 def gen_project_tcl(project_name, project_revision, target, template, working_dir):
     """Generate the make_project.tcl file and copy over needed files.
@@ -254,19 +237,19 @@ def copy_additional_project_files(target, working_dir):
         if not(os.path.isfile(working_dir + file)) and os.path.isfile(RES_DIR + file):
             os.makedirs(os.path.dirname(working_dir + file), exist_ok=True)
             copyfile(RES_DIR + file, working_dir + file)
-def gen_pll_qsys(working_dir):
-    """Generate the phase locked loop component needed for the audioblade configuration.
+def gen_qsys_system_from_qsys_file(qsys_file, working_dir):
+    """Generate qsys file.
 
     Parameters
     ----------
     working_dir : string
         Working directory of the generation process
     """
-    pll_file = "pll_sys.qsys"
-    copyfile(RES_DIR + pll_file, working_dir + pll_file)
-    log_msg = "Generating pll"
-    cmd = f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {pll_file}'
-    log_file_path = working_dir + "pll_gen.log"
+    if not(os.path.isfile(working_dir + qsys_file)) and os.path.isfile(RES_DIR + qsys_file):
+        copyfile(RES_DIR + qsys_file, working_dir + qsys_file)
+    log_msg = f"Generating {qsys_file}"
+    cmd = f'cd {working_dir} && {QSYS_BIN_DIR}qsys-generate --synthesis=VHDL --search-path="../component_library/**/*,$"  {qsys_file}'
+    log_file_path = working_dir + f"{qsys_file}_gen.log"
 
     run_cmd_and_log(cmd, log_msg, log_file_path)
 
@@ -308,8 +291,9 @@ def gen_project(project_name, project_revision, target, template, working_dir):
     """
     gen_project_tcl(project_name, project_revision,
                     target, template, working_dir)
-    if(target == Reflex):
-        gen_pll_qsys(working_dir)
+    qsys_files = filter(lambda file: file.endswith(".qsys"), target.files_list)
+    for file in qsys_files:
+        gen_qsys_system_from_qsys_file(file, working_dir)
 
     log_msg = "Generating project"
     cmd = f"cd {working_dir} && {QUARTUS_BIN_DIR}quartus_sh -t make_project.tcl"
@@ -387,6 +371,8 @@ def execute_quartus_workflow(target_system, custom_components, sys_clock_rate_hz
         target = Audiomini
     elif(target_system == "reflex"):
         target = Reflex
+    elif(target_system == "audioblade"):
+        target = Audioblade
     else:
         raise ValueError(
             f"The provided target: {target_system} is not supported")

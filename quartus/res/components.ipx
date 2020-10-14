@@ -8,7 +8,7 @@
     <!--      When the search is recursive, the search stops at any directory that contains a _hw.tcl or .ipx file.                                -->
     <!--      https://www.altera.com/documentation/zcn1513987282935.html#mwh1409958678312                                                          -->
     <path path="../../../../../../component_library/**/*" />
-    <path path="../../../component_library/**/*" />
+    <path path="./ip/**/*" />
     <path path="../**/*" />
     <!-- <path path="../../simulink_models/**/*" /> -->
 </library>

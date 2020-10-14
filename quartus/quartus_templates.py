@@ -202,6 +202,8 @@ class QuartusTemplates:
                 tcl_file_type = 'QIP_FILE '
             elif file.endswith('qsys'):
                 tcl_file_type = 'QSYS_FILE '
+            elif file.endswith('sdc'):
+                tcl_file_type = 'SDC_FILE '
             else:
                 tcl_file_type = 'SOURCE_FILE '
             files_list += base_string + tcl_file_type + file
