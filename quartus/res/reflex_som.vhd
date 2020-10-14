@@ -39,6 +39,7 @@ USE     IEEE.STD_LOGIC_1164.ALL;    --! Use standard logic elements.
 USE     IEEE.NUMERIC_STD.ALL ;      --! Use numeric standard.
 
 LIBRARY PLL_SYS;                    --! Use PLL_SYS Library.
+LIBRARY HPS;                        --! Use HPS Library.
 
 LIBRARY altera;
 USE altera.altera_primitives_components.all;
@@ -231,7 +232,7 @@ ARCHITECTURE A10SoM_System_Arch OF A10SoM_System IS
    -- Component Declerations
    ------------------------------------------------------------------------------------------
 
-    component soc_system is
+    component reflex_system is
         port (
             ad1939_abclk_clk                     : in    std_logic                     := 'X';             -- clk
             ad1939_alrclk_clk                    : in    std_logic                     := 'X';             -- clk
@@ -336,9 +337,12 @@ ARCHITECTURE A10SoM_System_Arch OF A10SoM_System IS
             hps_spim1_ss3_n_o                    : out   std_logic;                                        -- ss3_n_o
             hps_spim1_sclk_out_clk               : out   std_logic;                                        -- clk
             mclk_pll_locked_export               : out   std_logic;                                        -- export
-            reset_reset_n                        : in    std_logic                                       -- serial_clk_out
+            reset_reset_n                        : in    std_logic                     := 'X';             -- reset_n
+            rj45_interface_serial_data_in        : in    std_logic                     := 'X';             -- serial_data_in
+            rj45_interface_serial_data_out       : out   std_logic;                                        -- serial_data_out
+            rj45_interface_serial_clk_out        : out   std_logic                                         -- serial_clk_out
         );
-    end component soc_system;
+    end component reflex_system;
 
 
    ------------------------------------------------------------------------------------------
@@ -468,7 +472,7 @@ BEGIN
    sb_hps_rst_n <= not(sb_reset_dly(1)); -- de-assert HPS     reset 125ms after HPS DDR reset
 
 
-   u0 : COMPONENT soc_system
+   u0 : COMPONENT reflex_system
      PORT MAP (
 
       -- clock and data connections to AD1939
@@ -575,7 +579,10 @@ BEGIN
       hps_i2c0_scl_in_clk                     => i2c_serial_scl_in,
       hps_i2c0_clk_clk                        => serial_scl_oe,
       hps_i2c0_sda_i                          => i2c_0_i2c_serial_sda_in,
-      hps_i2c0_sda_oe                         => i2c_serial_sda_oe
+      hps_i2c0_sda_oe                         => i2c_serial_sda_oe,
+      rj45_interface_serial_data_in        => mic_array_sdi,        --               rj45_interface.serial_data_in
+      rj45_interface_serial_data_out       => mic_array_sdo,       --                             .serial_data_out
+      rj45_interface_serial_clk_out        => mic_array_sck         --                             .serial_clk_out
     );
 
 

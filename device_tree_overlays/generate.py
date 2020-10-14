@@ -4,7 +4,8 @@ import pathlib
 from dtogen.parser import parse
 from dtogen.node import FpgaRegionNode, DeviceTreeRootNode
 
-def generate_device_tree_overlay(sopcinfo_file, rbf_file, output_dir=""):
+
+def generate_device_tree_overlay(sopcinfo_file, rbf_file, output_dir="", dts=None):
     """Run the device tree generation process.
 
     Parameters
@@ -18,8 +19,12 @@ def generate_device_tree_overlay(sopcinfo_file, rbf_file, output_dir=""):
     """
     sopcinfo_file = sopcinfo_file.replace("\\\\", "\\")
     output_dir = pathlib.Path(output_dir)
-    rbf_file = str(pathlib.Path(rbf_file).with_suffix(".rbf"))
-    dts_file = pathlib.Path(rbf_file).with_suffix(".dts")
+    if rbf_file is not None:
+        rbf_file = str(pathlib.Path(rbf_file).with_suffix(".rbf"))
+    if dts is None:
+        dts_file = pathlib.Path(rbf_file).with_suffix(".dts")
+    else:
+        dts_file = pathlib.Path(dts).with_suffix(".dts")
 
     nodes = parse(sopcinfo_file)
     fpga_region_node = FpgaRegionNode(
@@ -42,12 +47,14 @@ def parseargs():
         description="Generates a device tree overlay file")
     arg_parser.add_argument(
         '-s', '--sopcinfo', help="Path to sopcinfo file containing description of Platform Designer system")
-    arg_parser.add_argument(
-        '-r', '--rbf', help="Name of programming file for the fpga")
+    arg_parser.add_argument('-r', '--rbf', default=None, required=False,
+                            help="Name of programming file for the fpga")
+    arg_parser.add_argument('-d', '--dts', default=None, required=False,
+                            help="Name of Device Tree Source file that will be generated")
     arg_parser.add_argument('-o', '--output-dir', default="",
                             required=False, help="Output directory for the dts file")
     args = arg_parser.parse_args()
-    return (args.sopcinfo, args.rbf, args.output_dir)
+    return (args.sopcinfo, args.rbf, args.output_dir, args.dts)
 
 
 if __name__ == "__main__":

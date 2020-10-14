@@ -9,6 +9,14 @@
    categories="System" />
  <parameter name="bonusData"><![CDATA[bonusData 
 {
+   element FE_FPGA_Microphone_Encoder_Decoder_0
+   {
+      datum _sortIndex
+      {
+         value = "10";
+         type = "int";
+      }
+   }
    element FE_Qsys_AD1939_Audio_Research_v1_0
    {
       datum _sortIndex
@@ -100,6 +108,14 @@
          type = "boolean";
       }
    }
+   element mic_array_adapter_0
+   {
+      datum _sortIndex
+      {
+         value = "9";
+         type = "int";
+      }
+   }
    element pll_using_AD1939_MCLK
    {
       datum _sortIndex
@@ -109,7 +125,7 @@
       }
       datum sopceditor_expanded
       {
-         value = "0";
+         value = "1";
          type = "boolean";
       }
    }
@@ -249,6 +265,24 @@
    type="conduit"
    dir="end" />
  <interface name="reset" internal="clk_hps.clk_in_reset" type="reset" dir="end" />
+ <interface
+   name="rj45_interface"
+   internal="FE_FPGA_Microphone_Encoder_Decoder_0.RJ45_Interface"
+   type="conduit"
+   dir="end" />
+ <module
+   name="FE_FPGA_Microphone_Encoder_Decoder_0"
+   kind="FE_FPGA_Microphone_Encoder_Decoder"
+   version="1.0"
+   enabled="1">
+  <parameter name="avalon_data_width" value="32" />
+  <parameter name="bme_data_width" value="96" />
+  <parameter name="cfg_data_width" value="16" />
+  <parameter name="ch_width" value="4" />
+  <parameter name="mic_data_width" value="24" />
+  <parameter name="n_mics" value="16" />
+  <parameter name="rgb_data_width" value="16" />
+ </module>
  <module
    name="FE_Qsys_AD1939_Audio_Research_v1_0"
    kind="FE_Qsys_AD1939_Audio_Research_v1"
@@ -1537,6 +1571,11 @@
   <parameter name="USE_PLI" value="0" />
  </module>
  <module
+   name="mic_array_adapter_0"
+   kind="mic_array_adapter"
+   version="1.0"
+   enabled="1" />
+ <module
    name="pll_using_AD1939_MCLK"
    kind="altera_iopll"
    version="18.0"
@@ -1660,10 +1699,10 @@
   <parameter name="gui_mif_gen_options">Generate New MIF File</parameter>
   <parameter name="gui_multiply_factor" value="6" />
   <parameter name="gui_new_mif_file_path" value="~/pll.mif" />
-  <parameter name="gui_number_of_clocks" value="1" />
+  <parameter name="gui_number_of_clocks" value="2" />
   <parameter name="gui_operation_mode" value="direct" />
   <parameter name="gui_output_clock_frequency0" value="98.304" />
-  <parameter name="gui_output_clock_frequency1" value="100.0" />
+  <parameter name="gui_output_clock_frequency1" value="36.864" />
   <parameter name="gui_output_clock_frequency10" value="100.0" />
   <parameter name="gui_output_clock_frequency11" value="100.0" />
   <parameter name="gui_output_clock_frequency12" value="100.0" />
@@ -1790,6 +1829,11 @@
    version="18.0"
    start="FE_Qsys_AD1939_Audio_Research_v1_0.Microphone_In"
    end="FE_Qsys_AD1939_Audio_Research_v1_0.Headphone_Out" />
+ <connection
+   kind="avalon_streaming"
+   version="18.0"
+   start="FE_FPGA_Microphone_Encoder_Decoder_0.mic_output"
+   end="mic_array_adapter_0.data_input" />
  <connection kind="clock" version="18.0" start="clk_hps.clk" end="jtag_master.clk" />
  <connection
    kind="clock"
@@ -1816,6 +1860,21 @@
    version="18.0"
    start="pll_using_AD1939_MCLK.outclk0"
    end="FE_Qsys_AD1939_Audio_Research_v1_0.sys_clk" />
+ <connection
+   kind="clock"
+   version="18.0"
+   start="pll_using_AD1939_MCLK.outclk0"
+   end="mic_array_adapter_0.sys_clk" />
+ <connection
+   kind="clock"
+   version="18.0"
+   start="pll_using_AD1939_MCLK.outclk0"
+   end="FE_FPGA_Microphone_Encoder_Decoder_0.sys_clk" />
+ <connection
+   kind="clock"
+   version="18.0"
+   start="pll_using_AD1939_MCLK.outclk1"
+   end="FE_FPGA_Microphone_Encoder_Decoder_0.serial_clk" />
  <connection
    kind="conduit"
    version="18.0"
@@ -1857,6 +1916,16 @@
    version="18.0"
    start="clk_hps.clk_reset"
    end="pll_using_AD1939_MCLK.reset" />
+ <connection
+   kind="reset"
+   version="18.0"
+   start="clk_hps.clk_reset"
+   end="mic_array_adapter_0.reset" />
+ <connection
+   kind="reset"
+   version="18.0"
+   start="clk_hps.clk_reset"
+   end="FE_FPGA_Microphone_Encoder_Decoder_0.reset" />
  <connection
    kind="reset"
    version="18.0"
