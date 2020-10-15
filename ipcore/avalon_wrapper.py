@@ -123,10 +123,12 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
             "numeric_std"
         ]),
         Library("work", [
-            "fixed_resize_pkg",
-            f"{entity_name}_pkg"
+            "fixed_resize_pkg"
         ])
     ]
+
+    if is_sample_based:
+        libraries[0].packages.append(f"{entity_name}_pkg")
 
     avalon_wrapper = EntityFile(
         avalon_entity.name, avalon_entity, avalon_architecture, libraries)
