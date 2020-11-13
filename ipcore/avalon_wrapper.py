@@ -70,6 +70,12 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
         Port(PortDir.In, Signal("avalon_slave_write")),
         Port(PortDir.In, Signal("avalon_slave_writedata", 32))
     ]
+
+    if(audio_in.dual):
+        avalon_entity_ports.append(Port(PortDir.In, Signal("avalon_sink_data", 32, None, "std_logic_vector", avalon_in_data_type)))
+    if(audio_out.dual):
+        avalon_entity_ports.append(Port(PortDir.Out, Signal("avalon_source_data", 32, None, "std_logic_vector", avalon_out_data_type)))
+
     avalon_entity = Entity(f"{entity_name}_avalon", avalon_entity_ports)
 
     avalon_architecture = Architecture(
@@ -128,7 +134,7 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
     ]
 
     if is_sample_based:
-        libraries[0].packages.append(f"{entity_name}_pkg")
+        libraries[1].packages.append(f"{entity_name}_pkg")
 
     avalon_wrapper = EntityFile(
         avalon_entity.name, avalon_entity, avalon_architecture, libraries)
