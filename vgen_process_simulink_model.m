@@ -18,9 +18,34 @@
 % openspeech@flatearthinc.com
 
 %% Generate the Simulink model VHDL code
-
+mp.generation_active = 1;
 % run the hdl coder
-generate_vhdl;
+%try
+    generate_vhdl;
+%catch
+%    mp.generation_active = 0;
+%    return;
+%end;
+mp.generation_active = 0;
+
+mdlrefs = find_mdlrefs(mp.modelName);
+prefix = hdlget_param(mp.modelName, 'ModulePrefix');
+sourcePatterns = [".*_pkg\.vhd"];
+
+for n = 1:numel(mdlrefs)
+    mdlref = string(mdlrefs{n});
+    if mdlref == mp.modelName
+        sourcePatterns(end + 1) = prefix + "(?!avalon).*\.vhd";
+    else
+        sourcePatterns(end + 1) = mdlref + filesep + filesep + prefix + ".*\.vhd";
+    end
+end
+
+sourcePatternsStr = "";
+for pattern = sourcePatterns
+    sourcePatternsStr =  sourcePatternsStr + " " + string('"') + pattern + '"'; 
+end
+
 
 % this is where hdlworkflow puts the vhdl files
 hdlpath = [mp.modelPath filesep 'hdlsrc' filesep mp.modelAbbreviation];
@@ -53,12 +78,26 @@ disp(['      created vhdl file: ' outfile])
 disp('vgen: Creating .tcl script for Platform Designer.')
 % NOTE: platform designer only adds components if they have the _hw.tcl suffix
 outfile = [hdlpath filesep mp.modelName '_dataplane_avalon_hw.tcl'];
+<<<<<<< HEAD
 
 hw_tcl_cmd = python + mp.codegen_path + filesep + "autogen_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile;
+=======
+<<<<<<< Updated upstream
+disp(['file ' config_filepath ' out ' outfile ' path ' hdlpath])
+disp(python + mp.ipcore_codegen_path + filesep + "create_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile )
+system(python + mp.ipcore_codegen_path + filesep + "create_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile );
+=======
+
+hw_tcl_cmd = python + mp.codegen_path + filesep + "autogen_hw_tcl.py -c " + config_file + " -w " + hdlpath + " -o " + outfile + " -s " + sourcePatternsStr;
+>>>>>>> Initial code to support model references
 
 disp(hw_tcl_cmd)
 system(hw_tcl_cmd);
 
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> Initial code to support model references
 disp(['      created tcl file: ' outfile])
 
 disp('vgen: Executing Quartus workflow')

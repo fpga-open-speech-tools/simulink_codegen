@@ -1,6 +1,7 @@
 import json
 from math import ceil, log
 import os
+import re
 from collections import namedtuple
 
 
@@ -21,10 +22,24 @@ class DataplaneConfig:
         self.sink_max_channel = 0
         self.source_max_channel = 0
 
-    def populate_additional_filesets(self, additionalFilesetAbsDir):
-        for filename in os.listdir(additionalFilesetAbsDir):
-            if filename.endswith(".vhd") and '_avalon' not in filename and (self.name in filename or "pkg" in filename):
-                self.additional_filesets.append(filename)
+    def populate_additional_filesets(self, additionalFilesetAbsDir, sourceFilePatterns):
+        for pattern in sourceFilePatterns:
+            
+            subdirectories = pattern.split('\\\\')[0:-1]
+            regex = pattern.split('\\\\')[-1]
+            subdirectory_path = "\\".join(subdirectories)
+            search_path = additionalFilesetAbsDir + "\\" + subdirectory_path
+            
+            matchingFiles = []
+            for filename in os.listdir(search_path):
+                if (re.match(regex, filename) and not(filename in self.additional_filesets)):
+                    if len(subdirectories) > 0:
+                        filepath = subdirectory_path + "\\\\" + filename
+                    else:
+                        filepath = filename
+                    matchingFiles.append(filepath)
+            self.additional_filesets.extend(matchingFiles)
+
 
     @staticmethod
     def parse_json(inputFilename, deviceIndex=0):

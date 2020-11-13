@@ -43,7 +43,8 @@ class AvalonConfig:
                 json_audio_in["fractionLength"],
                 json_audio_in["signed"]
                 ),
-            json_audio_in["numberOfChannels"]
+            json_audio_in["numberOfChannels"],
+            json_audio_in.get("dual") or False
         )
 
         json_audio_out = modeljson["system"]["audioOut"]
@@ -53,7 +54,8 @@ class AvalonConfig:
                 json_audio_out["fractionLength"],
                 json_audio_out["signed"]
                 ),
-            json_audio_out["numberOfChannels"]
+            json_audio_out["numberOfChannels"],
+            json_audio_out.get("dual") or False
         )
 
         json_registers = modeljson['devices'][0]["registers"]
