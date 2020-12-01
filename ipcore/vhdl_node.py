@@ -95,7 +95,8 @@ class EntityFile(VHDLFile):
 class Signal(BaseVHDLNode):
     def __init__(self, name, length=1, default_value=None, data_type=None, underlying_data_type=None):
         super().__init__(name)
-        self.length = length
+        
+        self.length = length or 1
         self.default_value = default_value
 
         if data_type is None:
