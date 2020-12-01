@@ -48,6 +48,7 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
     if addr_width == 0 and len(registers) == 1:
         addr_width = 1
     channel_in_width = int(ceil(log(audio_in.channel_count, 2)))
+    print(channel_in_width)
     channel_out_width = int(ceil(log(audio_out.channel_count, 2)))
 
     avalon_entity_ports = [
@@ -56,12 +57,12 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
         Port(PortDir.In, Signal("avalon_sink_valid")),
         Port(PortDir.In, Signal("avalon_sink_data", 32,
                                 None, "std_logic_vector", avalon_in_data_type)),
-        Port(PortDir.In, Signal("avalon_sink_channel", channel_in_width, None, "std_logic_vector")),
+        Port(PortDir.In, Signal("avalon_sink_channel", channel_in_width)),
         Port(PortDir.In, Signal("avalon_sink_error", 2)),
         Port(PortDir.Out, Signal("avalon_source_valid")),
         Port(PortDir.Out, Signal("avalon_source_data", 32,
                                  None, "std_logic_vector", avalon_out_data_type)),
-        Port(PortDir.Out, Signal("avalon_source_channel", channel_out_width, None, "std_logic_vector")),
+        Port(PortDir.Out, Signal("avalon_source_channel", channel_out_width)),
         Port(PortDir.Out, Signal("avalon_source_error", 2)),
         Port(PortDir.In, Signal("avalon_slave_address",
                                 addr_width, None, "std_logic_vector")),
