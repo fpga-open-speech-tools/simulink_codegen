@@ -215,6 +215,16 @@ class FPGADeviceAttribute(DeviceAttribute):
             Returns C function definition for reading the attribute value
         """
         return super().create_read_func(device_name)
+    def _read_int(self):
+        c_code = ""
+        c_code += f"  unsigned int tempValue;\n"
+        c_code += f"  tempValue = ioread32((u32 *)devp->regs + {str(self.offset)});\n"
+        c_code += "  fp_to_string(buf, tempValue" + \
+            ", " + str(self.data_type.fractional_bits) + ", " + \
+            str(self.data_type.signed).lower()+ ", " + \
+            str(self.data_type.width) + ");\n"
+        c_code += "  strcat2(buf,\"\\n\");\n"
+        return c_code
 
     def create_write_func(self, device_name):
         """Create C function definition for writing to the FPGA attribute.
