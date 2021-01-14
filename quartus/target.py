@@ -16,7 +16,7 @@ Audiomini = Target(name='audiomini', system_name='audiomini_system', device_fami
                    files_list=['Audiomini.vhd',
                                'audiomini_system/synthesis/audiomini_system.qip'],
                    top_level_vhdl_file='Audiomini.vhd', original_system='soc_system', base_address='20', axi_master_name='hps.h2f_lw_axi_master',
-                   audio_in='FE_Qsys_AD1939_Audio_Mini_v1_0.Line_In', audio_out='FE_Qsys_AD1939_Audio_Mini_v1_0.Headphone_Out',
+                   audio_in='FE_Qsys_AD1939_Audio_Mini_0.Line_In', audio_out='FE_Qsys_AD1939_Audio_Mini_0.Headphone_Out',
                    clock_name='clk_hps'
                    )
 

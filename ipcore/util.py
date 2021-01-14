@@ -1,7 +1,7 @@
 from math import fabs
 import collections
 
-Register = collections.namedtuple('Register', ['name', 'data_type', 'default'])
+Register = collections.namedtuple('Register', ['name', 'data_type', 'default', 'direction'])
 Audio = collections.namedtuple('Audio', ['data_type', 'channel_count', 'dual'])
 DataType = collections.namedtuple(
     'DataType', ['word_len', 'frac_len', 'signed'])

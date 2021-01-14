@@ -27,8 +27,8 @@ set target_system target_name
 load_package flow
 
 if [project_exists $project] {
-    project_open $project
-    create_revision $revision
+    project_open -force -current_revision $project
+    create_revision -set_current $revision
 } else {
     project_new $project -revision ${revision} -overwrite
 }

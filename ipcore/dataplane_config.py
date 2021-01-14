@@ -21,6 +21,8 @@ class DataplaneConfig:
 
         self.sink_max_channel = 0
         self.source_max_channel = 0
+        self.sink_bits_per_symbol = 24
+        self.source_bits_per_symbol = 24
 
     def populate_additional_filesets(self, additionalFilesetAbsDir, sourceFilePatterns):
         for pattern in sourceFilePatterns:
@@ -57,6 +59,8 @@ class DataplaneConfig:
 
         config.sink_max_channel = model.system.audioIn.numberOfChannels - 1
         config.source_max_channel = model.system.audioOut.numberOfChannels - 1
+        config.sink_bits_per_symbol = model.system.audioIn.wordLength
+        config.source_bits_per_symbol = model.system.audioOut.wordLength
         return config
 
 

@@ -39,8 +39,8 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
     working_dir : str, optional
         Directory to output avalon wrapper to, by default "" which is the current directory
     """
-    avalon_in_data_type = AD1939_DATA_TYPE
-    avalon_out_data_type = AD1939_DATA_TYPE
+    avalon_in_data_type = audio_in.data_type
+    avalon_out_data_type = audio_out.data_type
     if len(registers) == 0:
         addr_width = 0
     else:
@@ -48,19 +48,19 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
     if addr_width == 0 and len(registers) == 1:
         addr_width = 1
     channel_in_width = int(ceil(log(audio_in.channel_count, 2)))
-    print(channel_in_width)
+    
     channel_out_width = int(ceil(log(audio_out.channel_count, 2)))
 
     avalon_entity_ports = [
         Port(PortDir.In, Signal("clk")),
         Port(PortDir.In, Signal("reset")),
         Port(PortDir.In, Signal("avalon_sink_valid")),
-        Port(PortDir.In, Signal("avalon_sink_data", 32,
+        Port(PortDir.In, Signal("avalon_sink_data", audio_in.data_type.word_len,
                                 None, "std_logic_vector", avalon_in_data_type)),
         Port(PortDir.In, Signal("avalon_sink_channel", channel_in_width, None, "std_logic_vector")),
         Port(PortDir.In, Signal("avalon_sink_error", 2)),
         Port(PortDir.Out, Signal("avalon_source_valid")),
-        Port(PortDir.Out, Signal("avalon_source_data", 32,
+        Port(PortDir.Out, Signal("avalon_source_data", audio_out.data_type.word_len,
                                  None, "std_logic_vector", avalon_out_data_type)),
         Port(PortDir.Out, Signal("avalon_source_channel", channel_out_width, None, "std_logic_vector")),
         Port(PortDir.Out, Signal("avalon_source_error", 2)),
@@ -93,12 +93,11 @@ def generate_avalon_wrapper(registers, audio_in, audio_out, entity_name, working
         for reg in registers]
     dataplane_signals = create_dataplane_signals(
         audio_in, audio_out, is_sample_based)
-    register_prefix = "register_control_"
     register_ports = [
         Port(
-            PortDir.In,
+            PortDir.Out if reg.direction == "out" else PortDir.In,
             Signal(
-                register_prefix + reg.name,
+                reg.name.replace(" ", "_"),
                 reg.data_type.word_len,
                 None,
                 "std_logic" if reg.data_type.word_len == 1 else "std_logic_vector",
@@ -214,7 +213,7 @@ def create_dataplane_port_map(dataplane, entity, registers, register_signals, ar
         reg_signal = next(
             port for port in register_signals if port.name == reg.name)
         port_map[dataplane.get_port(
-            f"register_control_{reg.name}")] = reg_signal
+        reg.name)] = reg_signal
     return PortMap(f"u_{dataplane.name}", port_map, dataplane)
 
 
@@ -291,13 +290,13 @@ def create_bus_read_logic(register_signals, avalon_slave_readdata_signal):
     return logic_string
 
 
-def create_bus_write_logic(register_signals, avalon_slave_writedata_signal):
+def create_bus_write_logic(register_ports, avalon_slave_writedata_signal):
     """Create VHDL logic to write to dataplane registers.
 
     Parameters
     ----------
-    register_signals : list of Signal
-        Signals connected to dataplane registers
+    register_ports : list of Port
+        Ports connected to dataplane registers
     avalon_slave_writedata_signal : Signal
         Signal that the avalon writes data to
 
@@ -312,7 +311,7 @@ def create_bus_write_logic(register_signals, avalon_slave_writedata_signal):
 
     logic_string = ""
     logic_string += tab() + f"if reset = '1' then \n"
-    for reg in register_signals:
+    for reg in register_ports:
         data_type = reg.underlying_data_type
         default_bit_string = num_to_bitstring(
                 reg.default_value, data_type.word_len, data_type.frac_len)
@@ -323,8 +322,10 @@ def create_bus_write_logic(register_signals, avalon_slave_writedata_signal):
         f"elsif rising_edge(clk) and {write_enable} = '1' then\n"
     logic_string += tab(2) + f"case {avalon_slave_address} is\n"
 
-    addr_width = int(ceil(log(len(register_signals), 2)))
-    for idx, reg in enumerate(register_signals):
+    addr_width = int(ceil(log(len(register_ports), 2)))
+    for idx, reg in enumerate(register_ports):
+        # if(reg.direction == PortDir.Out):
+        #     continue
         addr = "{0:0{1}b}".format(idx, addr_width)
         assignment = reg.generate_assignment(data_in)
         logic_string += tab(3) + f"when \"{addr}\" => {assignment}"

@@ -192,7 +192,7 @@ class Device:
         c_code += "static int " + self.name + "_probe(struct platform_device *pdev) {\n"
         c_code += "  int ret_val = -EBUSY;\n"
         c_code += ("  char device_name[" + str(len(self.name) + 12) +"] = \"fe_" + self.name
-                        + "_\";\n")  # adding 12 to len is arbitrary
+                        + "\";\n")  # adding 12 to len is arbitrary
         c_code += "  char deviceMinor[20];\n"
         c_code += "  int status;\n"
         c_code += "  struct device *device_obj;\n"
@@ -212,9 +212,6 @@ class Device:
         c_code += "  status = alloc_chrdev_region(&dev_num, 0, 1, \"fe_" + self.name + "_\");\n"
         c_code += "  if (status != 0)\n"
         c_code += "    goto bad_alloc_chrdev_region;\n"
-        c_code += "  sprintf(deviceMinor, \"%d\", MAJOR(dev_num));\n"
-        c_code += "  strcat(device_name, deviceMinor);\n"
-        c_code += "  pr_info(\"%s\\n\", device_name);\n"
         c_code += "  cl = class_create(THIS_MODULE, device_name);\n"
         c_code += "  if (cl == NULL)\n"
         c_code += "    goto bad_class_create;\n"
@@ -222,6 +219,9 @@ class Device:
         c_code += "  status = cdev_add(&" + devp_struct_name + "->cdev, dev_num, 1);\n"
         c_code += "  if (status != 0)\n"
         c_code += "    goto bad_cdev_add;\n"
+        c_code += "  sprintf(deviceMinor, \"%d\", MINOR(dev_num));\n"
+        c_code += "  strcat(device_name, deviceMinor);\n"
+        c_code += "  pr_info(\"%s\\n\", device_name);\n"
         c_code += f" device_obj = device_create_with_groups(cl, NULL, dev_num, NULL, {self.name}_groups, device_name);\n"
         c_code += f"  if (device_obj == NULL)\n"
         c_code += "    goto bad_device_create;\n"
