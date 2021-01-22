@@ -35,7 +35,6 @@ def get_device(device_type, config):
         # DeviceType.I2C: I2CDevice(config.device_name, config.compatible, config.device_address), 
         DeviceType.FPGA: FPGADevice(config.device_name, config.compatible) 
     }
-
     device = device_map.get(device_type, Device(config.device_name, config.compatible))
     device.device_attributes = config.device_attributes
     return device
@@ -194,7 +193,7 @@ class Device:
         c_code = ""
         c_code += f"static int {self.name}_probe(struct platform_device *pdev) {{\n"
         c_code += "  int ret_val = -EBUSY;\n"
-        c_code += (f"  char device_name[" + str(len(self.name) + 12) +"] = \"{DRIVER_PREFIX}_" + self.name
+        c_code += (f"  char device_name[{str(len(self.name) + 12)}] = \"{DRIVER_PREFIX}_" + self.name
                         + "\";\n")  # adding 12 to len is arbitrary
         c_code += "  char deviceMinor[20];\n"
         c_code += "  int status;\n"
