@@ -131,8 +131,9 @@ class HwTCLGenerator:
 
 
     def create_mm_connection_point(self):
-        if not self.has_avalon_mm_slave_signal:
-            return ""
+        # Even if no memory, the interface is still needed
+        #if not self.has_avalon_mm_slave_signal:
+        #    return ""
         tcl = ""
         memory_slave = 'avalon_slave'
         tcl += "add_interface " + memory_slave + " avalon end\n"

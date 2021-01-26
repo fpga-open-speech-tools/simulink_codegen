@@ -60,7 +60,7 @@ project_close
 class QuartusTemplates:
     """Generate templates for Quartus workflow."""
 
-    def __init__(self, num_custom_components, baseAddress=20):
+    def __init__(self, num_custom_components, baseAddress=40):
         """Initialize QuartusTemplates.
 
         Parameters

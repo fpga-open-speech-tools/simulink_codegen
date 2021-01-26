@@ -276,8 +276,10 @@ def create_bus_read_logic(register_signals, avalon_slave_readdata_signal):
     logic_string += tab() + \
         f"if rising_edge(clk) and {read_enable} = '1' then \n"
     logic_string += tab(2) + f"case {avalon_slave_address} is\n"
-
-    addr_width = int(ceil(log(len(register_signals), 2)))
+    try:
+        addr_width = int(ceil(log(len(register_signals), 2)))
+    except ValueError:
+        addr_width = 0
     for idx, reg in enumerate(register_signals):
         addr = "{0:0{1}b}".format(idx, addr_width)
         assignment = data_out.generate_assignment(reg)
@@ -322,7 +324,10 @@ def create_bus_write_logic(register_ports, avalon_slave_writedata_signal):
         f"elsif rising_edge(clk) and {write_enable} = '1' then\n"
     logic_string += tab(2) + f"case {avalon_slave_address} is\n"
 
-    addr_width = int(ceil(log(len(register_ports), 2)))
+    try:
+        addr_width = int(ceil(log(len(register_ports), 2)))
+    except ValueError:
+        addr_width = 0
     for idx, reg in enumerate(register_ports):
         # if(reg.direction == PortDir.Out):
         #     continue

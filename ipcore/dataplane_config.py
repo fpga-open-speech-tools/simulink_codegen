@@ -55,7 +55,7 @@ class DataplaneConfig:
         if len(model.devices[deviceIndex].registers) > 0:
             config.has_avalon_mm_slave_signal = True
             config.address_bus_size = int(
-                ceil(log(len(model.devices[deviceIndex].registers))))
+                ceil(log(len(model.devices[deviceIndex].registers), 2)))
 
         config.sink_max_channel = model.system.audioIn.numberOfChannels - 1
         config.source_max_channel = model.system.audioOut.numberOfChannels - 1
