@@ -61,6 +61,7 @@ class AvalonConfig:
         json_registers = modeljson['devices'][0]["registers"]
         registers = []
         for reg in json_registers:
+            direction = reg.get("direction") or "in"
             registers.append(Register(
                 reg["name"],
                 DataType(
@@ -68,7 +69,8 @@ class AvalonConfig:
                     reg["dataType"]["fractionLength"],
                     reg["dataType"]["signed"]
                     ),
-                reg["defaultValue"]
+                reg["defaultValue"],
+                direction
             ))
         entity_name = modeljson['devices'][0]["name"] + "_dataplane"
         is_sample_based = modeljson['system']['processing'].lower() == "sample"

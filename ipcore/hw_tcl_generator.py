@@ -20,6 +20,9 @@ class HwTCLGenerator:
         self.sink_max_channel = dataplane_config.sink_max_channel
         self.source_max_channel = dataplane_config.source_max_channel
 
+        self.sink_bits_per_symbol = dataplane_config.sink_bits_per_symbol
+        self.source_bits_per_symbol = dataplane_config.source_bits_per_symbol
+
     def write_tcl(self, outputFilename):
         with open(outputFilename, "w") as out_file:
             out_file.write(self.generate())
@@ -128,8 +131,9 @@ class HwTCLGenerator:
 
 
     def create_mm_connection_point(self):
-        if not self.has_avalon_mm_slave_signal:
-            return ""
+        # Even if no memory, the interface is still needed
+        #if not self.has_avalon_mm_slave_signal:
+        #    return ""
         tcl = ""
         memory_slave = 'avalon_slave'
         tcl += "add_interface " + memory_slave + " avalon end\n"
@@ -189,7 +193,7 @@ class HwTCLGenerator:
         tcl += "set_interface_property " + sink + " associatedClock clock\n"
         tcl += "set_interface_property " + sink + " associatedReset reset\n"
         tcl += "set_interface_property " + sink + \
-            " dataBitsPerSymbol " + str(self.data_bus_size) + "\n"
+            " dataBitsPerSymbol " + str(self.sink_bits_per_symbol) + "\n"
         tcl += "set_interface_property " + sink + " errorDescriptor \"\"\n"
         tcl += "set_interface_property " + \
             sink + " firstSymbolInHighOrderBits true\n"
@@ -203,7 +207,7 @@ class HwTCLGenerator:
             sink + " CMSIS_SVD_VARIABLES \"\"\n"
         tcl += "set_interface_property " + sink + " SVD_ADDRESS_GROUP \"\"\n"
         tcl += "add_interface_port " + sink + " avalon_sink_valid valid Input 1\n"
-        tcl += "add_interface_port " + sink + " avalon_sink_data data Input 32\n"
+        tcl += f"add_interface_port {sink} avalon_sink_data data Input {self.sink_bits_per_symbol}\n"
         tcl += f"add_interface_port {sink} avalon_sink_channel channel Input {int(ceil(log(self.sink_max_channel + 1, 2))) or 1}\n"
         tcl += "add_interface_port " + sink + " avalon_sink_error error Input 2\n"
         tcl += "\n\n\n"
@@ -217,7 +221,7 @@ class HwTCLGenerator:
         tcl += "set_interface_property " + source + " associatedClock clock\n"
         tcl += "set_interface_property " + source + " associatedReset reset\n"
         tcl += "set_interface_property " + source + \
-            " dataBitsPerSymbol " + str(self.data_bus_size) + "\n"
+            " dataBitsPerSymbol " + str(self.source_bits_per_symbol) + "\n"
         tcl += "set_interface_property " + source + " errorDescriptor \"\"\n"
         tcl += "set_interface_property " + \
             source + " firstSymbolInHighOrderBits true\n"
@@ -232,7 +236,7 @@ class HwTCLGenerator:
         tcl += "set_interface_property " + source + " SVD_ADDRESS_GROUP \"\"\n"
 
         tcl += "add_interface_port " + source + " avalon_source_valid valid Output 1\n"
-        tcl += "add_interface_port " + source + " avalon_source_data data Output 32\n"
+        tcl += f"add_interface_port {source} avalon_source_data data Output {self.source_bits_per_symbol}\n"
         tcl += f"add_interface_port {source} avalon_source_channel channel Output {int(ceil(log(self.source_max_channel + 1, 2))) or 1}\n"
         tcl += "add_interface_port " + source + " avalon_source_error error Output 2\n"
         tcl += "\n\n\n"

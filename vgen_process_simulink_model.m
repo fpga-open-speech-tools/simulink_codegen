@@ -122,6 +122,7 @@ disp('Creating device driver.')
 outfile = [hdlpath filesep mp.modelName '.c'];
 device_driver_cmd = python + mp.codegen_path + "/autogen_device_driver.py -c " + config_filepath ...
     + " -w " + hdlpath ;
+disp(device_driver_cmd)
 system(device_driver_cmd);
 disp(['      created device driver: ' outfile])
 

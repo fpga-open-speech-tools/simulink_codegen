@@ -27,8 +27,8 @@ set target_system target_name
 load_package flow
 
 if [project_exists $project] {
-    project_open $project
-    create_revision $revision
+    project_open -force -current_revision $project
+    create_revision -set_current $revision
 } else {
     project_new $project -revision ${revision} -overwrite
 }
@@ -60,7 +60,7 @@ project_close
 class QuartusTemplates:
     """Generate templates for Quartus workflow."""
 
-    def __init__(self, num_custom_components, baseAddress=20):
+    def __init__(self, num_custom_components, baseAddress=40):
         """Initialize QuartusTemplates.
 
         Parameters
