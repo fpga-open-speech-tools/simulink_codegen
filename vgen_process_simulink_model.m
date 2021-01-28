@@ -177,7 +177,7 @@ else
     disp('The current operating system is unsupported for automatically compiling device tree overlays')
 end
 
-disp()
+disp('')
 disp('Upload the following artifacts to S3 for deployment:')
 
 paths = string(mp.modelPath) + filesep + "model.json";
@@ -189,7 +189,7 @@ for artifactPath = paths
     disp(["   " + artifactPath])
 end
 
-disp()
+disp('')
 disp('vgen: Finished.')
 
 % reset fast simulation flag so running the model simulation isn't so slow after generating code. 
