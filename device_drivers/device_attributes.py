@@ -20,7 +20,7 @@
 #     Bozeman, MT 59718
 #     openspeech@flatearthinc.com
 
-from device_drivers.device import DeviceType
+from device_drivers.device import DeviceType, DRIVER_PREFIX
 
 class DataType:
     """Represent a fixed point number."""
@@ -137,7 +137,7 @@ class DeviceAttribute:
             Returns C function definition for reading the attribute value
         """
         c_code = "static ssize_t " + self.name + "_read(struct device *dev, struct device_attribute *attr, char *buf) {\n"
-        c_code += "  fe_" + device_name + "_dev_t * devp = (fe_" + device_name + "_dev_t *)dev_get_drvdata(dev);\n"
+        c_code += f"  {DRIVER_PREFIX}_{device_name}_dev_t * devp = ({DRIVER_PREFIX}_{device_name}_dev_t *)dev_get_drvdata(dev);\n"
         if self.data_type.name == "string":
             c_code += self._read_string()
         else:
@@ -215,6 +215,16 @@ class FPGADeviceAttribute(DeviceAttribute):
             Returns C function definition for reading the attribute value
         """
         return super().create_read_func(device_name)
+    def _read_int(self):
+        c_code = ""
+        c_code += f"  unsigned int tempValue;\n"
+        c_code += f"  tempValue = ioread32((u32 *)devp->regs + {str(self.offset)});\n"
+        c_code += "  fp_to_string(buf, tempValue" + \
+            ", " + str(self.data_type.fractional_bits) + ", " + \
+            str(self.data_type.signed).lower()+ ", " + \
+            str(self.data_type.width) + ");\n"
+        c_code += "  strcat2(buf,\"\\n\");\n"
+        return c_code
 
     def create_write_func(self, device_name):
         """Create C function definition for writing to the FPGA attribute.
@@ -234,7 +244,7 @@ class FPGADeviceAttribute(DeviceAttribute):
         c_code += "  char substring[80];\n"
         c_code += "  int substring_count = 0;\n"
         c_code += "  int i;\n"
-        c_code += "  fe_" + device_name + "_dev_t *devp = (fe_" + device_name + \
+        c_code += f"  {DRIVER_PREFIX}_{device_name}_dev_t *devp = ({DRIVER_PREFIX}_" + device_name + \
                         "_dev_t *)dev_get_drvdata(dev);\n"
         c_code += "  for (i = 0; i < count; i++) {\n"
         c_code += "    if ((buf[i] != ',') && (buf[i] != ' ') && (buf[i] != '\\0') && (buf[i] != '\\r') && (buf[i] != '\\n')) {\n"
@@ -319,7 +329,7 @@ class SPIDeviceAttribute(DeviceAttribute):
                 c_code += ","
         c_code += "};\n"
         c_code += "  uint8_t code = 0x00;\n"
-        c_code += "  fe_" + device_name + "_dev_t * devp = (fe_" + device_name + \
+        c_code += f"  {DRIVER_PREFIX}_{device_name}_dev_t * devp = ({DRIVER_PREFIX}_" + device_name + \
                         "_dev_t *) dev_get_drvdata(dev);\n"
         c_code += "  for (i = 0; i < count; i++) {\n"
         c_code += "    if ((buf[i] != ',') && (buf[i] != ' ') && (buf[i] != '\\0') && (buf[i] != '\\r') && (buf[i] != '\\n')) {\n"
@@ -389,7 +399,7 @@ class I2CDeviceAttribute(DeviceAttribute):
                 c_code += ","
         c_code += "};\n"
         c_code += "  uint8_t code = 0x00;\n"
-        c_code += "  fe_" + device_name + "_dev_t * devp = (fe_" + device_name + \
+        c_code += f"  {DRIVER_PREFIX}_{device_name}_dev_t * devp = ({DRIVER_PREFIX}_" + device_name + \
                         "_dev_t *) dev_get_drvdata(dev);\n"
         c_code += "  for (i = 0; i < count; i++) {\n"
         c_code += "    if ((buf[i] != ',') && (buf[i] != ' ') && (buf[i] != '\\0') && (buf[i] != '\\r') && (buf[i] != '\\n')) {\n"
